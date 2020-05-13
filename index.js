@@ -25,9 +25,14 @@ client.on('message', message => {
         // list "Voted" contains all user ID's who have been upvoted or downvoted in one message
         console.log(voted); 
         
+        // user_details = client.users.fetch(voted[0]);
+        // console.log(user_details);
+        client.users.fetch(voted[0]);
+        console.log(client.user.username);
+        
+        // message.channel.send(voted[0]);
 
-
-        // Database.points(sqlite3, voted[0], "ArtisDD");
+        Database.points(sqlite3, voted[0], "ArtisDD");
 
 
     }

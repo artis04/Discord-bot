@@ -47,6 +47,19 @@ var points = function points(sqlite3, userId, username){
         }
     });
 
+    // let sql = `SELECT * FROM votes WHERE userID LIKE ` + userId;
+
+    // db.all(sql, [], (err, rows) => {
+    // if (err) {
+    //     throw err;
+    // }
+    // rows.forEach((row) => {
+    //     console.log(row.name);
+    // });
+    // });
+
+
+
 
 };
 
