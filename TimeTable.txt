@@ -12,3 +12,23 @@ Also I have to disable option to upvote or downvote yourself...
 Firstly I tried to implement MySql database, and watched some tutorials on web but it was very complicated and I couldn't understand anything...
 Then I remembered in python I was using Sqlite not MySql, so I implemented Sqlite3 from node.js and everything worked very well!
 
+I created sqlite database where it stores user id, username, up votes, downvotes and points(overall votes [upvote - downVotes]) in table named votes.
+
+I figured out how to get username from user id.
+
+I will add functionality to add multiple points at the same time (only for owner role) but default value will be 1.
+
+Added ability to add multiple users at the same time in database... Still have to think of way to access database values.
+
+Day 2 :: 14-05-2020
+
+I finally got database to work, when you type !upvotes it counts upVotes += 1, but I broke option to add new users to database :|
+
+I found what caused that issue to not add new users to database... Still have not fixed it.
+
+Fixed issue with database, now when user is created then autommaticaly adds upvote or downvote.
+
+I will have to redesign my code, because now it repeats at one point. I updated ability only for owner to make custom amount of points to give to someone, 
+also fixed bug to not be able to add multiple points to one person mentioning person multiple times in one message.
+
+Added points system, points = upVotes - downVotes
