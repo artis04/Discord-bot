@@ -93,67 +93,48 @@ var points = function points(sqlite3, userId, username, points=1, positiveVote){
 
 */
 
-var points = function points(sqlite3, userId, username, points=1, positiveVote){
+var points = function points(sqlite3, userId, username, positiveVote, message){
+    let points = 1;
     let db = new sqlite3.Database('./database.db');
     let sql = "";
-    sql = `SELECT upVotes, downVotes FROM votes WHERE userID = ?`;
+    let userExists = true;
+    
+    sql = `SELECT username FROM votes WHERE userID = ?`
+    db.get(sql, [userId], function(error, rows){
+        if(error) return console.log(error.message);
+        
+        if(rows === undefined){
+            // create new user in database
 
-        db.all(sql, [userId], (err, rows) => {
-            if (err) {
-                return console.log(err.message);
-            }
-            console.log("Rows: " + rows);
-            if (rows == ""){
-                // No such user registered in database
-                
-            }
-
+            sql = `INSERT INTO votes (username, userID) VALUES(?, ?)`;
+            db.run(sql, [username, userId], (error) => {
+                if(error) return console.log(error.message);
+            });
+            // user created successfuly
+        }
+        db.all(`SELECT upVotes, downVotes FROM votes WHERE userID = ?`, [userId], (err, rows) => {
+            if (err) return console.log(err.message);
+            
             votes = rows[0];
             console.log(votes);
 
-
             if (positiveVote){
-                try{
                         sql = `UPDATE votes SET upVotes = ? WHERE userID = ?`;
-                        db.run(sql, [votes.upVotes += points, userId], function(err) {
-                            if (err) {
-                            return console.error(err.message);
-                            }
-                        
+                        db.run(sql, [votes.upVotes += 1, userId], function(error) {
+                            if (error) return console.error(err.message);
                         });
-                    
-                }catch(TypeError){
-                    // No such user registered in database
-                    db.run(`INSERT INTO votes (username, userID, upVotes) VALUES(?, ?, 1)`, [username, userId], function(error){
-                        if (error){
-                            return console.log(error.message);
-                        }
-                        updatePoints(sqlite3, userId, votes);  // update points column in database
-            
-
-                    });
-                }   
             }else{
-                try{
                     sql = `UPDATE votes SET downVotes = ? WHERE userID = ?`;
-                    db.run(sql, [votes.downVotes += points, userId], function(err){
-                        if(err){
-                            return console.log(err.message);
-                        }
+                    db.run(sql, [votes.downVotes += 1, userId], function(error){
+                        if(error) return console.log(err.message);
                     });
-                }catch(TypeError){
-                    db.run(`INSERT INTO votes (username, userID, downVotes) VALUES(?, ?, ?)`, [username, userId, points], function(err){
-                        if(err){
-                            return console.log(err.message);
-                        }
-                    })
-                }
             }
-            // updatePoints(sqlite3, userId, votes);  // update points column in database
-            
+            updatePoints(sqlite3, userId, votes);  // update points column in database
         });
-    
+    });
+    // sql = ;
 
+/////////////////////////////////////////////
     // })
 
     // db.run("INSERT INTO votes (username, userID) VALUES(?, ?)", [username, userId], function(err){
@@ -195,29 +176,6 @@ var points = function points(sqlite3, userId, username, points=1, positiveVote){
     // });
 
 
-
-    
-};
-
-var getPoints = function getPoints(sqlite3, userId, message, user){
-    let db = new sqlite3.Database('./database.db');
-
-    let sql = `SELECT points FROM votes WHERE userID = ?`;
-    db.all(sql, [userId], (error, rows) => {
-        if (error) return console.log(error.message);
-    
-        votes = rows[0];
-        if (rows === "" || votes.points === null){  // in case user have null points it will show 0
-            // No such user registered in database
-            votes.points = 0;
-        }   
-        
-        message.channel.send(user.username + " has " + votes.points + " points!");
-        return votes.points;
-    });
-
-}
-
 // sql = `SELECT upVotes, downVotes FROM votes WHERE userID = ?`;
 
 // db.all(sql, [userId], (err, rows) => {
@@ -229,7 +187,64 @@ var getPoints = function getPoints(sqlite3, userId, message, user){
 //         // No such user registered in database
         
 //     }
+};
 
+var sendUserPoints = function sendUserPoints(sqlite3, user, message, user){
+    let db = new sqlite3.Database('./database.db');
+    db.get(`SELECT username FROM votes WHERE userID = ?`, [user.id], function(error, rows) {
+        if(error) return console.log(error.message);
+        
+        if(rows === undefined){
+            // create new user in database
+            sql = `INSERT INTO votes (username, userID) VALUES(?, ?)`;
+            db.run(sql, [user.username, user.id], (error) => {
+                if(error) return console.log(error.message);
+            });
+            // user created successfuly
+        }
+        sql = `SELECT
+            ROW_NUMBER () OVER(
+                ORDER BY points
+            ) rowNumber,
+            points
+            FROM votes WHERE userID = ?`;
+        db.all(sql, [user.id], (error, rows) => {
+            if (error) return console.log(error.message);
+            console.log(rows);
+            votes = rows[0];
+            if (rows === "" || votes.points === null){  // in case user have null points it will show 0
+                // No such user registered in database
+                votes.points = 0;
+            }   
+
+            db.all(`SELECT ROW_NUMBER () OVER (ORDER BY points DESC) rowNumber, userID FROM votes`, (error, rows) => {
+                if(error) return console.log(error.message);
+                console.log(rows);
+                for(let i = 0; i < rows.length;i++){
+                    console.log(rows[i].userID.toString());
+                    console.log(user.id);
+                    if (rows[i].userID.toString() == user.id){
+                        let serverPlace = rows[i].rowNumber;
+                    }
+                }
+            })
+
+            let serverPlace = "";
+            if(rows[0].rowNumber == 1){
+                serverPlace = "1st"
+            }else if(rows[0].rowNumber == 2){
+                serverPlace = "2nd"
+            }else if(rows[0].rowNumber == 3){
+                serverPlace = "3rd"
+            }else{
+                serverPlace = rows[0].rowNumber + "th"
+            }
+            message.channel.send("<@!" + user.id + ">" + " has " + votes.points + " points! \n Currently he is in " + serverPlace + " Place");
+            return votes.points;
+        });
+
+    });
+}
 
 function updatePoints(sqlite3, userId, votes){
     let db = new sqlite3.Database('./database.db');
@@ -247,4 +262,4 @@ function updatePoints(sqlite3, userId, votes){
 
 module.exports.createTables = createTables;
 module.exports.addPoints = points;
-module.exports.getPoints = getPoints;
+module.exports.sendUserPoints = sendUserPoints;

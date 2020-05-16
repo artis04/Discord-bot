@@ -52,7 +52,7 @@ client.on('message', message => {
             var userInfo = client.users.fetch(voted_users[i]);
             // userInfo contains id; is_bot?; username; discriminator; avatarID; flags; lastmessageid; lastmessagechannelid
             userInfo.then(user => {
-                Database.addPoints(sqlite3, user.id, user.username, 1, positiveVote);
+                Database.addPoints(sqlite3, user.id, user.username, positiveVote);
             }).catch(console.error);
         };
 
@@ -64,7 +64,7 @@ client.on('message', message => {
         for(i=0; i < voted_users.length; i++){
             var userInfo = client.users.fetch(voted_users[i]);
             userInfo.then(async user => {
-                Database.getPoints(sqlite3, user.id, message, user);
+                Database.sendUserPoints(sqlite3, user, message, user);
             }).catch(console.error);
         }
     }

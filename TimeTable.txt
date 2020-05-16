@@ -32,3 +32,9 @@ I will have to redesign my code, because now it repeats at one point. I updated 
 also fixed bug to not be able to add multiple points to one person mentioning person multiple times in one message.
 
 Added points system, points = upVotes - downVotes
+
+Day 3 :: 15-05-2020
+
+I fixed some bugs and created !points command, now bot correctly sends points for mentioned person back to channel... also I added thing that bot is sending in witch place
+that person is in server. (I only added that computer gets list oredered by points from database, but for some strage reason userID gives me back correct user id except last two
+digits,,, those are 00 to everyone.)
