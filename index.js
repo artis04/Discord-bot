@@ -4,7 +4,13 @@ const Database = require("./Database.js");
 const sqlite3 = require('sqlite3').verbose();
 const client = new Discord.Client();
 
+/*
+<!-- Cool Commands -->
 
+ message.guild.name
+ client.runtime
+
+ */
 Database.createTables(sqlite3);  // creates database with required tables if not created yet.
 
 client.login(config.token);
@@ -29,6 +35,11 @@ function getAllMentionedUsers(message){
 client.on('message', message => {
     var msg = message.content;
     var ownerOrSensei = false;
+    console.log(message.channels);
+    for(i=0;i<message.guild.channels.length;i++){
+        console.log(message.guild.channels[i].type);
+    }
+
     if(message.member.roles.cache.find(role => role.name === "Owner") || message.member.roles.cache.find(role => role.name === "Sensei")) {
         ownerOrSensei = true;  // checks if message was sent from owner or Sensei (Role named Owner or Sensei)
     }

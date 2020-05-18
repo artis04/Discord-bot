@@ -37,7 +37,16 @@ var createTables = function createTables(sqlite3){
             // table created successfuly
         });
 
+        sql = `
+        CREATE TABLE IF NOT EXISTS channels (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            
+        )
+        `
+
     });
+
+    
 
     db.close((err) => {
         if (err) {
@@ -132,62 +141,65 @@ var points = function points(sqlite3, userId, username, positiveVote, message){
             updatePoints(sqlite3, userId, votes);  // update points column in database
         });
     });
-    // sql = ;
-
-/////////////////////////////////////////////
-    // })
-
-    // db.run("INSERT INTO votes (username, userID) VALUES(?, ?)", [username, userId], function(err){
-    //     if(err){
-    //         console.log(err.message);
-    //     }
-    // });
-
-    // if (upVote){
-    //     db.run("INSTER INTO votes (")
-    // }
-
-
-    // sql = `SELECT * FROM votes WHERE userID LIKE ?`;
-    // // var sql1 = db.exec("SELECT * FROM votes WEHERE userID LIKE " + userId);
-    // // console.log(sql1);
-    // sql = `UPDATE votes SET upVotes = 126 WHERE userID = ?`;
-
-
-    // db.run(sql, [userId], function(err) {
-    //     if (err) {
-    //       return console.error(err.message);
-    //     }
-    //     console.log()
-      
-    //   });
-
-    // db.forEach(sql, function(err, row){
-    //     console.log(row.user_name);
-    // })
-
-    // db.all(sql, [], (err, rows) => {
-    // if (err) {
-    //     throw err;
-    // }
-    // rows.forEach((row) => {
-    //     console.log(row.name);
-    // });
-    // });
-
-
-// sql = `SELECT upVotes, downVotes FROM votes WHERE userID = ?`;
-
-// db.all(sql, [userId], (err, rows) => {
-//     if (err) {
-//         return console.log(err.message);
-//     }
-//     console.log("Rows: " + rows);
-//     if (rows == ""){
-//         // No such user registered in database
-        
-//     }
 };
+
+/*
+    sql = ;
+
+    ///////////////////////////////////////////
+        })
+
+        db.run("INSERT INTO votes (username, userID) VALUES(?, ?)", [username, userId], function(err){
+            if(err){
+                console.log(err.message);
+            }
+        });
+
+        if (upVote){
+            db.run("INSTER INTO votes (")
+        }
+
+
+        sql = `SELECT * FROM votes WHERE userID LIKE ?`;
+        // var sql1 = db.exec("SELECT * FROM votes WEHERE userID LIKE " + userId);
+        // console.log(sql1);
+        sql = `UPDATE votes SET upVotes = 126 WHERE userID = ?`;
+
+
+        db.run(sql, [userId], function(err) {
+            if (err) {
+            return console.error(err.message);
+            }
+            console.log()
+        
+        });
+
+        db.forEach(sql, function(err, row){
+            console.log(row.user_name);
+        })
+
+        db.all(sql, [], (err, rows) => {
+        if (err) {
+            throw err;
+        }
+        rows.forEach((row) => {
+            console.log(row.name);
+        });
+        });
+
+
+    sql = `SELECT upVotes, downVotes FROM votes WHERE userID = ?`;
+
+    db.all(sql, [userId], (err, rows) => {
+        if (err) {
+            return console.log(err.message);
+        }
+        console.log("Rows: " + rows);
+        if (rows == ""){
+            // No such user registered in database
+            
+        }
+*/
 
 var sendUserPoints = function sendUserPoints(sqlite3, user, message, user){
     let db = new sqlite3.Database('./database.db');
@@ -196,7 +208,7 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, user){
         
         if(rows === undefined){
             // create new user in database
-            sql = `INSERT INTO votes (username, userID) VALUES(?, ?)`;
+            sql = `INSERT INTO votes (username, userID, points) VALUES(?, ?, 0)`;
             db.run(sql, [user.username, user.id], (error) => {
                 if(error) return console.log(error.message);
             });
@@ -217,32 +229,52 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, user){
                 votes.points = 0;
             }   
 
-            db.all(`SELECT ROW_NUMBER () OVER (ORDER BY points DESC) rowNumber, userID FROM votes`, (error, rows) => {
+            let serverPlace = "";
+
+            db.all(`SELECT ROW_NUMBER () OVER (ORDER BY points DESC) rowNumber, username, userID, points FROM votes`, (error, rows) => {
                 if(error) return console.log(error.message);
-                console.log(rows);
+                // console.log(rows);
                 for(let i = 0; i < rows.length;i++){
-                    console.log(rows[i].userID.toString());
-                    console.log(user.id);
-                    if (rows[i].userID.toString() == user.id){
-                        let serverPlace = rows[i].rowNumber;
+                    // console.log(rows[i].userID.toString().slice(0, 16));
+                    // console.log(user.id.slice(0, 16)); // error
+                    if (rows[i].userID.toString().slice(0, 16) == user.id.slice(0, 16)){
+                        serverPlace = rows[i].rowNumber;
+                        pts = rows[i];
                     }
                 }
+
+                usernamesWithSamePoints = [];
+                for(i = 0;i < rows.length; i++){
+                    if(rows[i].points === pts.points && rows[i].userID != pts.userID){
+                        usernamesWithSamePoints.push(rows[i].username);
+                    }
+                }
+
+
+                if(usernamesWithSamePoints.length != 0){
+                    myMessage = "You are in this place with " + usernamesWithSamePoints.length + " other users: "
+                    for(i = 0; i < usernamesWithSamePoints.length; i++){
+                        myMessage += usernamesWithSamePoints[i] + ", "; // No mentioning to not spam mentions to users who don't want to be mentioned?
+                    }
+                    myMessage = myMessage.slice(0, myMessage.length - 2) + ".";
+                    message.channel.send(myMessage);
+                    
+                }
+                if(serverPlace === ""){
+                    message.channel.send("<@!" + user.id + "> Currently have 0 points");
+                }else if(serverPlace === 1){
+                    serverPlace = "1st";
+                }else if(serverPlace === 2){
+                    serverPlace = "2nd";
+                }else if(serverPlace === 3){
+                    serverPlace = "3rd";
+                }else{
+                    serverPlace = serverPlace + "th";
+                }
+                message.channel.send("<@!" + user.id + "> has " + votes.points + " points! \n Currently in " + serverPlace + " Place on " + message.guild.name + " server");
+                return votes.points;
             })
-
-            let serverPlace = "";
-            if(rows[0].rowNumber == 1){
-                serverPlace = "1st"
-            }else if(rows[0].rowNumber == 2){
-                serverPlace = "2nd"
-            }else if(rows[0].rowNumber == 3){
-                serverPlace = "3rd"
-            }else{
-                serverPlace = rows[0].rowNumber + "th"
-            }
-            message.channel.send("<@!" + user.id + ">" + " has " + votes.points + " points! \n Currently he is in " + serverPlace + " Place");
-            return votes.points;
         });
-
     });
 }
 
