@@ -1,25 +1,17 @@
-var createTables = function createTables(sqlite3, client){    
+var createTables = function createTables(sqlite3, textChannels){    
     let db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (error) =>{
         if(error) return console.log(error.message);
 
         // Connected to database successfuly
-        textChannels = [];
-        client.channels.cache.forEach(channel => {
-            if(channel.type === 'text'){
-                textChannels.push(channel.name);
-            }
-            console.log(textChannels);
-        });
-        // console.log(client.guild.channels);
 
         let sql = `
         CREATE TABLE IF NOT EXISTS votes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT,
             userID INTEGER,
-            upVotes INTEGER,
-            downVotes INTEGER,
-            points INTEGER
+            upVotes INTEGER DEFAULT 0,
+            downVotes INTEGER DEFAULT 0,
+            points INTEGER DEFAULT 0
         )`;
 
         db.run(sql, (error) => {
@@ -44,19 +36,19 @@ var createTables = function createTables(sqlite3, client){
             }
             // table created successfuly
         });
-
+  
         sql = `
         CREATE TABLE IF NOT EXISTS channels (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            userID INTEGER,
-            FOREIGN KEY (userID)
-            REFERENCES votes (userID)
-                ON UPDATE NO ACTION
-                ON DELETE SET DEFAULT
-        
-        )
-        `
-
+            userID INTEGER NOT NULL`
+        for(i=0;i < textChannels.length; i++){
+            sql += ",\n" + textChannels[i] + " INTEGER DEFAULT 0";
+        }
+        sql += `,\n FOREIGN KEY(userID)
+                    REFERENCES votes (userID)
+                    ON DELETE NO ACTION
+                );`
+        console.log(sql);
 
 
         db.run(sql, (error) => {
@@ -114,7 +106,7 @@ var points = function points(sqlite3, userId, username, points=1, positiveVote){
     
 */
 
-var points = function points(sqlite3, userId, username, positiveVote, message){
+var points = function points(sqlite3, userId, username, positiveVote, textChannels, user){
     let points = 1;
     let db = new sqlite3.Database('./database.db');
     let sql = "";
@@ -127,10 +119,11 @@ var points = function points(sqlite3, userId, username, positiveVote, message){
         if(rows === undefined){
             // create new user in database
 
-            sql = `INSERT INTO votes (username, userID) VALUES(?, ?)`;
-            db.run(sql, [username, userId], (error) => {
-                if(error) return console.log(error.message);
-            });
+            addUser(db, user, textChannels);
+            // sql = `INSERT INTO votes (username, userID) VALUES(?, ?)`;
+            // db.run(sql, [username, userId], (error) => {
+            //     if(error) return console.log(error.message);
+            // });
             // user created successfuly
         }
         db.all(`SELECT upVotes, downVotes FROM votes WHERE userID = ?`, [userId], (err, rows) => {
@@ -200,18 +193,41 @@ var points = function points(sqlite3, userId, username, positiveVote, message){
             
         }
 */
+function addUser(db, user, textChannels){
+    sql = `INSERT INTO votes (username, userID) VALUES(?, ?)`;
+    db.run(sql, [user.username, user.id], (error) => {
+        if(error) return console.log(error.message);
+    });
 
-var sendUserPoints = function sendUserPoints(sqlite3, user, message, user){
+    sql = `INSERT INTO channels (userID) VALUES(?)`
+
+    // for(i = 0; i < textChannels.length; i++){
+    //     sql += ",\n" + textChannels[i]
+
+    // }
+    // sql += ") VALUES(?" + ", 0".repeat(textChannels.length) + ")"
+
+
+        console.log(sql);
+
+    db.run(sql, [user.id], (error) => {
+        if(error) return console.log(error.message);
+    });
+
+}
+
+var sendUserPoints = function sendUserPoints(sqlite3, user, message, user, textChannels){
     let db = new sqlite3.Database('./database.db');
     db.get(`SELECT username FROM votes WHERE userID = ?`, [user.id], function(error, rows) {
         if(error) return console.log(error.message);
-        
+
         if(rows === undefined){
             // create new user in database
-            sql = `INSERT INTO votes (username, userID, points) VALUES(?, ?, 0)`;
-            db.run(sql, [user.username, user.id], (error) => {
-                if(error) return console.log(error.message);
-            });
+            addUser(db, user, textChannels)
+            // sql = `INSERT INTO votes (username, userID, points) VALUES(?, ?, 0)`;
+            // db.run(sql, [user.username, user.id], (error) => {
+            //     if(error) return console.log(error.message);
+            // });
             // user created successfuly
         }
         sql = `SELECT
