@@ -10,7 +10,7 @@ const client = new Discord.Client();
  client.runtime
  */
 
-Database.createTables(sqlite3, client);  // creates database with required tables if not created yet.
+// Database.createTables(sqlite3, client);  // creates database with required tables if not created yet.
 
 client.login(config.token);
 //console.log(client.channels.cache.for);
@@ -21,6 +21,19 @@ client.login(config.token);
 //     console.log(textChannels);
 // });
 // console.log(client.channels.cache);
+
+
+
+client.on('ready', () => {
+    let textChannels = []
+    client.channels.cache.forEach(channel => {
+        if(channel.type === 'text'){
+            textChannels.push(channel.name);
+        }
+    })
+    Database.createTables(sqlite3, textChannels);
+});
+
 
 function getAllMentionedUsers(message){
     var usersId = message.content.split("<@!");  // mentioned user id's  (Discord mentioning works like: <@!CLIENT_ID>)
@@ -41,43 +54,7 @@ function getAllMentionedUsers(message){
 
 client.on('message', message => {
     var ownerOrSensei = false;
-
-
-    // console.log(client.guilds.channels);
-    // console.log(message.guild.channels.guild);
-    textChannels = [];
-    message.guild.channels.cache.forEach(channel => {
-        if(channel.type === 'text'){
-            textChannels.push(channel.name);
-        }
-        // console.log(textChannels);
-    });
-
-    console.log(message.guild.channels.cache);
-    //709855212315213884
-
-    // client.guilds.channel.cache.forEach((guild) => {
-    //     console.log(guild.name);
-    // });
-    // const listedChannels = []; 
-    // console.log(message.guild.channels.forEach(element => {
-    //    console.log(element); 
-    // }));
-    // message.guild.channels.forEach(channel => { 
-    //     if(channel.permissionsFor(message.author).has('VIEW_CHANNEL')) listedChannels.push(channel.name);
-    // });
-    // message.channel.send(`You have access to: ${listedChannels.join(',')}`);
-
-    /*
-    let channelNames = []
-    message.channels.forEach(channel => {
-        if(channel.permissionFor(message.author).has('VIEW_CHANNEL')) {
-            channelNames.push(channel.name);
-        }
-    });
-    console.log(channelNames);
-
-*/
+    
     // console.log(message.channels);
     for(i=0;i<message.guild.channels.length;i++){
         console.log(message.guild.channels[i].type);
@@ -100,13 +77,18 @@ client.on('message', message => {
             positiveVote = false;
         };
      
-
+        let textChannels = []
+        message.guild.channels.cache.forEach(channel => {
+            if(channel.type === 'text'){
+                textChannels.push(channel.name);
+            }
+        });
         
         for(i = 0; i < voted_users.length; i++){
             var userInfo = client.users.fetch(voted_users[i]);
             // userInfo contains id; is_bot?; username; discriminator; avatarID; flags; lastmessageid; lastmessagechannelid
             userInfo.then(user => {
-                Database.addPoints(sqlite3, user.id, user.username, positiveVote);
+                Database.addPoints(sqlite3, user.id, user.username, positiveVote, textChannels, user);
             }).catch(console.error);
         };
 
@@ -115,10 +97,18 @@ client.on('message', message => {
         let voted_users = getAllMentionedUsers(message);
         console.log(voted_users);
 
+        let textChannels = []
+        message.guild.channels.cache.forEach(channel => {
+            if(channel.type === 'text'){
+                textChannels.push(channel.name);
+            }
+        });
+
+
         for(i=0; i < voted_users.length; i++){
             var userInfo = client.users.fetch(voted_users[i]);
             userInfo.then(async user => {
-                Database.sendUserPoints(sqlite3, user, message, user);
+                Database.sendUserPoints(sqlite3, user, message, user, textChannels);
             }).catch(console.error);
         }
     }
