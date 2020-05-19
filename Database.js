@@ -1,9 +1,17 @@
-var createTables = function createTables(sqlite3){
+var createTables = function createTables(sqlite3, client){    
     let db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (error) =>{
         if(error) return console.log(error.message);
 
         // Connected to database successfuly
-        
+        textChannels = [];
+        client.channels.cache.forEach(channel => {
+            if(channel.type === 'text'){
+                textChannels.push(channel.name);
+            }
+            console.log(textChannels);
+        });
+        // console.log(client.guild.channels);
+
         let sql = `
         CREATE TABLE IF NOT EXISTS votes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,9 +48,20 @@ var createTables = function createTables(sqlite3){
         sql = `
         CREATE TABLE IF NOT EXISTS channels (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            
+            userID INTEGER,
+            FOREIGN KEY (userID)
+            REFERENCES votes (userID)
+                ON UPDATE NO ACTION
+                ON DELETE SET DEFAULT
+        
         )
         `
+
+
+
+        db.run(sql, (error) => {
+            if(error) return console.log(error.message);
+        });
 
     });
 
@@ -61,7 +80,6 @@ var createTables = function createTables(sqlite3){
 var points = function points(sqlite3, userId, username, points=1, positiveVote){
     let db = new sqlite3.Database('./database.db');
     let sql = `SELECT upVotes, downVotes FROM votes WHERE userID = ?`
-
         db.all(sql, [userId], (err, rows) => {
             if (err) {
                 return console.log(err.message);
@@ -75,12 +93,8 @@ var points = function points(sqlite3, userId, username, points=1, positiveVote){
                     }
                 })
             }
-
             votes = rows[0];
             console.log(votes);
-
-
-
             // HUGE PROBLES WHEN CREATING NEW USER
             try{
                 if (positiveVote){
@@ -98,8 +112,6 @@ var points = function points(sqlite3, userId, username, points=1, positiveVote){
             
         });
     
-
-
 */
 
 var points = function points(sqlite3, userId, username, positiveVote, message){
@@ -145,27 +157,20 @@ var points = function points(sqlite3, userId, username, positiveVote, message){
 
 /*
     sql = ;
-
     ///////////////////////////////////////////
         })
-
         db.run("INSERT INTO votes (username, userID) VALUES(?, ?)", [username, userId], function(err){
             if(err){
                 console.log(err.message);
             }
         });
-
         if (upVote){
             db.run("INSTER INTO votes (")
         }
-
-
         sql = `SELECT * FROM votes WHERE userID LIKE ?`;
         // var sql1 = db.exec("SELECT * FROM votes WEHERE userID LIKE " + userId);
         // console.log(sql1);
         sql = `UPDATE votes SET upVotes = 126 WHERE userID = ?`;
-
-
         db.run(sql, [userId], function(err) {
             if (err) {
             return console.error(err.message);
@@ -173,11 +178,9 @@ var points = function points(sqlite3, userId, username, positiveVote, message){
             console.log()
         
         });
-
         db.forEach(sql, function(err, row){
             console.log(row.user_name);
         })
-
         db.all(sql, [], (err, rows) => {
         if (err) {
             throw err;
@@ -186,10 +189,7 @@ var points = function points(sqlite3, userId, username, positiveVote, message){
             console.log(row.name);
         });
         });
-
-
     sql = `SELECT upVotes, downVotes FROM votes WHERE userID = ?`;
-
     db.all(sql, [userId], (err, rows) => {
         if (err) {
             return console.log(err.message);
@@ -294,4 +294,4 @@ function updatePoints(sqlite3, userId, votes){
 
 module.exports.createTables = createTables;
 module.exports.addPoints = points;
-module.exports.sendUserPoints = sendUserPoints;
+module.exports.sendUserPoints = sendUserPoints; 
