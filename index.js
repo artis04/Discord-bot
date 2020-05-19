@@ -6,14 +6,21 @@ const client = new Discord.Client();
 
 /*
 <!-- Cool Commands -->
-
  message.guild.name
  client.runtime
-
  */
-Database.createTables(sqlite3);  // creates database with required tables if not created yet.
+
+Database.createTables(sqlite3, client);  // creates database with required tables if not created yet.
 
 client.login(config.token);
+//console.log(client.channels.cache.for);
+// client.channels.cache.forEach(channel => {
+//     if(channel.type === 'text'){
+//         textChannels.push(channel.name);
+//     }
+//     console.log(textChannels);
+// });
+// console.log(client.channels.cache);
 
 function getAllMentionedUsers(message){
     var usersId = message.content.split("<@!");  // mentioned user id's  (Discord mentioning works like: <@!CLIENT_ID>)
@@ -33,9 +40,45 @@ function getAllMentionedUsers(message){
 
 
 client.on('message', message => {
-    var msg = message.content;
     var ownerOrSensei = false;
-    console.log(message.channels);
+
+
+    // console.log(client.guilds.channels);
+    // console.log(message.guild.channels.guild);
+    textChannels = [];
+    message.guild.channels.cache.forEach(channel => {
+        if(channel.type === 'text'){
+            textChannels.push(channel.name);
+        }
+        // console.log(textChannels);
+    });
+
+    console.log(message.guild.channels.cache);
+    //709855212315213884
+
+    // client.guilds.channel.cache.forEach((guild) => {
+    //     console.log(guild.name);
+    // });
+    // const listedChannels = []; 
+    // console.log(message.guild.channels.forEach(element => {
+    //    console.log(element); 
+    // }));
+    // message.guild.channels.forEach(channel => { 
+    //     if(channel.permissionsFor(message.author).has('VIEW_CHANNEL')) listedChannels.push(channel.name);
+    // });
+    // message.channel.send(`You have access to: ${listedChannels.join(',')}`);
+
+    /*
+    let channelNames = []
+    message.channels.forEach(channel => {
+        if(channel.permissionFor(message.author).has('VIEW_CHANNEL')) {
+            channelNames.push(channel.name);
+        }
+    });
+    console.log(channelNames);
+
+*/
+    // console.log(message.channels);
     for(i=0;i<message.guild.channels.length;i++){
         console.log(message.guild.channels[i].type);
     }
