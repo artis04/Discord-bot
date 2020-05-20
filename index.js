@@ -35,22 +35,27 @@ client.on('ready', () => {
 });
 
 
-function getAllMentionedUsers(message){
-    var usersId = message.content.split("<@!");  // mentioned user id's  (Discord mentioning works like: <@!CLIENT_ID>)
-    let mentionedPersons = [];
-    for(var i = 1; i < usersId.length; i++){
+function getAllMentionedUsersOrChannels(message, persons){
+    if(persons){
+        split_string = "<@!";
+    }else{
+        split_string = "<#";
+    }
+    // (Discord mentioning works like: <@!CLIENT_ID>   OR <#CHANNEL_ID>)
+    var specificID = message.content.split(split_string);
+    let mentioned = [];
+    for(var i = 1; i < specificID.length; i++){
         try{ // in case there is no valid @mention user id (then do catch == skip this.)
 
-            var valid_id = usersId[i].substring(0, usersId[i].indexOf(">"))
-            if (!mentionedPersons.includes(valid_id)){  // pervents to spam one user multiple times at once.
-                mentionedPersons.push(valid_id);
+            var valid_id = specificID[i].substring(0, specificID[i].indexOf(">"))
+            if (!mentioned.includes(valid_id)){  // pervents to spam one user or channel multiple times at once.
+                mentioned.push(valid_id);
             }
         }
         catch{}
     }
-    return mentionedPersons;
+    return mentioned;
 }
-
 
 client.on('message', message => {
     var ownerOrSensei = false;
@@ -66,7 +71,7 @@ client.on('message', message => {
 
     if(message.content.toLowerCase().startsWith("!upvote") || message.content.toLowerCase().startsWith("!downvote")){
         var voted_users = [];
-        voted_users = getAllMentionedUsers(message);
+        voted_users = getAllMentionedUsersOrChannels(message, true);
         console.log(voted_users);
 
         // list "voted_users" contains all user ID's who have been upvoted or downvoted in message
@@ -94,20 +99,29 @@ client.on('message', message => {
 
 
     }else if(message.content.toLowerCase().startsWith("!points")){
-        let voted_users = getAllMentionedUsers(message);
+        console.log(message.content);
+        let voted_users = getAllMentionedUsersOrChannels(message, true);
+        let channels = getAllMentionedUsersOrChannels(message, false);
         console.log(voted_users);
+        console.log(channels);
 
-        let textChannels = []
+        let mentionedTextChannels = []
         message.guild.channels.cache.forEach(channel => {
-            if(channel.type === 'text'){
-                textChannels.push(channel.name);
+            if(channels.includes(channel.id)){
+                mentionedTextChannels.push(channel.name);
             }
+
         });
+        console.log(client.users.fetch(voted_users[0]));
 
 
         for(i=0; i < voted_users.length; i++){
             var userInfo = client.users.fetch(voted_users[i]);
             userInfo.then(async user => {
+                for(i = 0; i < channels.length; i++){
+                    
+                }
+
                 Database.sendUserPoints(sqlite3, user, message, user, textChannels);
             }).catch(console.error);
         }
