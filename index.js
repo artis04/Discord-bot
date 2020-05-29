@@ -11,6 +11,14 @@ const client = new Discord.Client();
 
 client.login(config.token);
 let badWords = badWordAlert.makeList(); // swear and inpolite words
+let roleList = automatedRoles.makeList(); // automatic role giving roles and points
+automatedRoles.createRoles(roleList);
+
+
+console.log(client);
+// client.guilds.cache.forEach(wtf => {
+//     console.log(wtf);
+// })
 
 client.on('ready', () => {
     let textChannels = []
@@ -46,6 +54,19 @@ function getAllMentionedUsersOrChannels(message, getUsers){
 }
 
 client.on('message', async message => {
+
+    // message.guild.roles.create({
+    // data: {
+    //     name: "fucking hell",
+    //     color: "BLUE",
+    //     permissions: []
+    // },
+    // reason: "INITIALIZED BY BOT WITH ROLES FILE",
+    // }).then(console.log)
+    // .catch(console.error);
+    // console.log(roles[32]);
+    client.guilds
+
     if(message.channel.type === "dm"){ // dm messages
         if(message.content === "!createUser"){
             userRegiter.getUserRegistry(sqlite3, message.author, message)
@@ -82,7 +103,7 @@ client.on('message', async message => {
             var userInfo = client.users.fetch(voted_users[i]);
             // userInfo contains id; is_bot?; username; discriminator; avatarID; flags; lastmessageid; lastmessagechannelid
             userInfo.then(user => {
-                userPoints.addPoints(sqlite3, positiveVote, user, message);
+                userPoints.addPoints(sqlite3, positiveVote, user, message, roleList);
             }).catch(console.error);
         };
 
@@ -194,34 +215,7 @@ client.on('message', async message => {
 
         //const roles = require("./roles.txt");
         
-        let roles = [];
-        let upvotes = [];
-        let downvotes = [];
 
-        let indicator = "";
-
-        var fs = require('fs');
-        var words = fs.readFileSync('roles.txt').toString().split("\n"); // Googles banned words
-        for(i in words) {
-            words[i] = words[i].replace("\r", "");
-            if(words[i] === "===upvotes==="){
-                indicator = "up";
-            }else if(words[i] === "===downvotes==="){
-                indicator = "down";
-            }else if(words[i] === "===roles==="){
-                indicator = "roles";
-            }
-            if(indicator === "up"){
-                upvotes.push(words[i]);
-            }else if(indicator === "down"){
-                downvotes.push(words[i]);
-            }else{
-                roles.push(words[i]);
-            }
-        }
-        console.log(upvotes);
-        console.log(downvotes);
-        console.log(roles);
         
 
     //     message.guild.roles.create({

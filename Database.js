@@ -9,7 +9,9 @@ var createTables = function createTables(sqlite3, textChannels){
             userID INTEGER,
             upVotes INTEGER DEFAULT 0,
             downVotes INTEGER DEFAULT 0,
-            points INTEGER DEFAULT 0
+            points INTEGER DEFAULT 0,
+            role_points INTEGER DEFAULT 0,
+            role_index INTEGER DEFAULT 0
         )`;
 
         db.run(sql, (error) => {

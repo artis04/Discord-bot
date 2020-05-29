@@ -122,7 +122,7 @@ function updatePoints(sqlite3, userId){
 
 }
 
-var addPoints = function addPoints(sqlite3, positiveVote, user, message){
+var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleList){
     let db = new sqlite3.Database('./database.db');
     let sql = "";
 
@@ -138,12 +138,13 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message){
        
 
         if (positiveVote){
-            sql = `UPDATE votes SET upVotes = upVotes + 1 WHERE userID = ?`;
+            sql = `UPDATE votes SET upVotes = upVotes + 1, role_points = role_points + 1 WHERE userID = ?`;
             db.run(sql, [user.id], function(error) {
                 if (error){
                 message.channel.send("Database error, user is NOT updated");
                 return console.error(error.message);
                 }
+                Role_giving.check(sqlite3, roleList, user);
             });
             
             sql = `UPDATE channels SET ` + message.channel.name + ` = ` + message.channel.name + ` + 1 WHERE userID = ?`;
@@ -165,7 +166,7 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message){
             sendMessage(message, user, false);
         }
         updatePoints(sqlite3, user.id);  // update points column in database
-        Role_giving.check(sqlite3, );
+        // Role_giving.check(sqlite3, roleList, user);
     });
 };
 
