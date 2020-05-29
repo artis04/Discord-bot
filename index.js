@@ -53,16 +53,18 @@ client.on('message', async message => {
         return; // don't run further code as this is dm
     }
 
-    var ownerOrSensei = false;
+    let owner = false;
+    let sensei = false;
     try{
-        if(message.member.roles.cache.find(role => role.name === "Owner") || message.member.roles.cache.find(role => role.name === "Sensei")) {
-            ownerOrSensei = true;  // checks if message was sent from owner or Sensei (Role named Owner or Sensei)
+        if(message.member.roles.cache.find(role => role.name === "Owner")){
+            owner = true; 
+        }else if(message.member.roles.cache.find(role => role.name === "Sensei")){
+            sensei = true;
         }
     }catch{}
 
-    // Deal with swear words //
+    // Deal with banned words //
     badWordAlert.checkIfContains(sqlite3, client, message, badWords);
-
 
     if(message.content.toLowerCase().startsWith("!upvote") || message.content.toLowerCase().startsWith("!downvote")){
         var voted_users = [];
@@ -140,6 +142,44 @@ client.on('message', async message => {
         //         Database.achievement(sqlite3, description, user, message.author);
         //     });
         // }
+    }else if(message.content.toLowerCase().startsWith("!settings") && owner){
+        message.delete();
+        const embed = {
+            "title": "CURRENT SERVER SETTINGS",
+            "description": "",
+            "url": "https://discordapp.com",
+            "color": 16776966,
+            "timestamp": "2020-05-23T09:38:49.916Z",
+            "footer": {
+              "icon_url": "https://cdn.discordapp.com/embed/avatars/0.png",
+              "text": "footer text"
+            },
+            "author": {
+              "name": message.guild.name,
+              "url": "https://discordapp.com",
+              "icon_url": "https://cdn.discordapp.com/embed/avatars/0.png"
+            },
+            "fields": [
+              {
+                "name": "Up role at points",
+                "value": "32, 64, 82, 91, 1024",
+              },
+              {
+                "name": "Down role at down points",
+                "value": "2, 4, 8, 10, 11, 12, ++",
+              },
+              {
+                "name": "Roles",
+                "value": "avenger, nooby, rookie, magic, goood, labais"
+              }
+            ]
+          };
+        message.author.send({ embed });
+        message.author.send("")
+
+
+
+
     }else if(message.content === "TEST"){
         // const roles = require("./roles.json");
         // let points = 1024;

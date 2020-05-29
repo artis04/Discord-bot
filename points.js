@@ -1,4 +1,5 @@
 const Database = require("./Database.js");
+const Role_giving = require("./automatedRoles.js");
 var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
     let db = new sqlite3.Database('./database.db');
     db.get(`SELECT username FROM votes WHERE userID = ?`, [user.id], function(error, rows) {
@@ -164,6 +165,7 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message){
             sendMessage(message, user, false);
         }
         updatePoints(sqlite3, user.id);  // update points column in database
+        Role_giving.check(sqlite3, );
     });
 };
 
