@@ -1,8 +1,8 @@
 const Discord = require("discord.js");
 const config = require("./config.json");
 const Database = require("./Database.js");
-const userRegiter = require("./userRegister.js");
 const userPoints = require("./points.js");
+const userRegiter = require("./userRegister.js");
 const badWordAlert = require("./badWordAlert.js");
 const automatedRoles = require("./automatedRoles.js");
 const sqlite3 = require('sqlite3').verbose();
@@ -12,45 +12,43 @@ const client = new Discord.Client();
 client.login(config.token);
 let badWords = badWordAlert.makeList(); // swear and inpolite words
 let roleList = automatedRoles.makeList(); // automatic role giving roles and points
-automatedRoles.createRoles(roleList);
 
 
-console.log(client);
-// client.guilds.cache.forEach(wtf => {
-//     console.log(wtf);
-// })
+// automatedRoles.createRoles(roleList);
+
+
 
 client.on('ready', () => {
-    let textChannels = []
-    client.channels.cache.forEach(channel => {
-        if(channel.type === 'text'){
-            textChannels.push(channel.name); // Get all channel names, so to create table in database with channel names
-        }
-    });
-    Database.createTables(sqlite3, textChannels); // creates database with required tables if not created yet.
+  let textChannels = []
+  client.channels.cache.forEach(channel => {
+    if(channel.type === 'text'){
+      textChannels.push(channel.name); // Get all channel names, so to create table in database with channel names
+    }
+  });
+  Database.createTables(sqlite3, textChannels); // creates database with required tables if not created yet.
 });
 
 
 function getAllMentionedUsersOrChannels(message, getUsers){
-    if(getUsers){
-        split_string = "<@!";
-    }else{
-        split_string = "<#";
-    }
-    // (Discord mentioning works like: <@!CLIENT_ID>   OR <#CHANNEL_ID>)
-    var specificID = message.content.split(split_string);
-    let mentioned = [];
-    for(var i = 1; i < specificID.length; i++){
-        try{ // in case there is no valid @mention id (then do catch == skip this.)
+  if(getUsers){
+    split_string = "<@!";
+  }else{
+    split_string = "<#";
+  }
+  // (Discord mentioning works like: <@!CLIENT_ID>   OR <#CHANNEL_ID>)
+  var specificID = message.content.split(split_string);
+  let mentioned = [];
+  for(var i = 1; i < specificID.length; i++){
+    try{ // in case there is no valid @mention id (then do catch == skip this.)
 
-            var valid_id = specificID[i].substring(0, specificID[i].indexOf(">"))
-            if (!mentioned.includes(valid_id)){  // pervents to spam one user or channel multiple times at once.
-                mentioned.push(valid_id);
-            }
-        }
-        catch{}
+      var valid_id = specificID[i].substring(0, specificID[i].indexOf(">"))
+      if (!mentioned.includes(valid_id)){  // pervents to spam one user or channel multiple times at once.
+        mentioned.push(valid_id);
+      }
     }
-    return mentioned;
+    catch{}
+  }
+  return mentioned;
 }
 
 client.on('message', async message => {
@@ -65,11 +63,17 @@ client.on('message', async message => {
     // }).then(console.log)
     // .catch(console.error);
     // console.log(roles[32]);
-    client.guilds
+    message.guild.roles.cache.forEach(role => {
+      console.log(role.name);
+    })
 
     if(message.channel.type === "dm"){ // dm messages
-        if(message.content === "!createUser"){
-            userRegiter.getUserRegistry(sqlite3, message.author, message)
+        if(message.content.toLowerCase().startsWith("!createuser") || message.content.toLowerCase().startsWith("!edituser")){
+          userRegiter.getUserRegistry(sqlite3, message.author, message, "createUser")
+        }else if(message.content.toLowerCase().startsWith("!info")){
+          userRegiter.getUserRegistry(sqlite3, message.author, message, "getUser")
+        }else if(message.content.toLowerCase().startsWith("!help")){
+          message.channel.send("You can type `!createUser` or `!editUser` to automatically sign you in next events.\nYou can type `!info` to get ")
         }
         return; // don't run further code as this is dm
     }
@@ -88,6 +92,7 @@ client.on('message', async message => {
     badWordAlert.checkIfContains(sqlite3, client, message, badWords);
 
     if(message.content.toLowerCase().startsWith("!upvote") || message.content.toLowerCase().startsWith("!downvote")){
+        message.delete();
         var voted_users = [];
         voted_users = getAllMentionedUsersOrChannels(message, true);
         // list "voted_users" contains all user ID's who have been upvoted or downvoted in message
@@ -137,7 +142,7 @@ client.on('message', async message => {
                 }
             }).catch(console.error);
         }
-        console.log(users);
+        // console.log(users);
         // Database.test(sqlite3, client.users.fetch(users));
     }else if(message.content.toLowerCase().startsWith("!leaderboard")){
         Database.leaderboard(sqlite3, message);

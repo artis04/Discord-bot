@@ -47,12 +47,21 @@ var makeList = function makeList(){
 }
 
 
-var createRoles = function createRoles(roleList, message){
-    
+var createRoles = function createRoles(roleList, message, vote){
+    if(vote === "downVote"){
+
+    }else{
+        
+    }
+    console.log();
+
     for(i = 0; i < roleList[2].length; i++){
         let line = roleList[2][i];
         let name = line.split(" == ")[0];
         let color = line.split(" == ")[1];
+
+
+
         // message.guild.roles.create({
         //     data: {
         //         name: name,
@@ -65,7 +74,7 @@ var createRoles = function createRoles(roleList, message){
         // console.log(roles[32]);
 
     }
-
+    console.log("HALA")
     // message.guild.roles.create({
     //     data: {
     //         name: 'suppper',

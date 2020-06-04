@@ -68,8 +68,7 @@ var createTables = function createTables(sqlite3, textChannels){
             name TEXT,
             surname TEXT,
             age INTEGER,
-            languages TEXT,
-            interests TEXT
+            languages TEXT
         )`
 
         db.run(sql, (error) => {

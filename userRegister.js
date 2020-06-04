@@ -1,21 +1,11 @@
-var eventRegistry = function eventRegistry(message, name, surname, preferedLanguages, interests, age, userExists){
+var eventRegistry = function eventRegistry(message, name, surname, preferedLanguages, age, userExists){
     const sqlite3 = require('sqlite3').verbose();
     let db = new sqlite3.Database("./database.db");
 
-    const filter = m => 1 === 1;
+    const filter = m => !m.author.bot;
     const collector = message.channel.createMessageCollector(filter, { time: 3000000 });  // creates message collector for 5 minutes max
 
-    message.channel.send(
-        "***You are about to create / edit user in database***\n" +
-        "To fill form you need to type number then space and then answer (e.g. for surname it will be \"2 mySurname\")\n" +
-        "```" + 
-        "1 -- Name (" + name + ")\n" + 
-        "2 -- Surname (" + surname + ")\n" + 
-        "3 -- Prefered programming languages ("+ preferedLanguages + ")\n" + 
-        "4 -- Interests (" + interests + ")\n" + 
-        "5 -- Age (" + age + ")\n" +
-        "9 -- ACCEPT DATA AND UPDATE USER" +
-        "```")
+    sendInfo(message, name, surname, preferedLanguages, age);
 
     collector.on('collect', msg => {
         if(msg.author.bot) return;
@@ -33,19 +23,15 @@ var eventRegistry = function eventRegistry(message, name, surname, preferedLangu
             message.channel.send("prefered programming languages: " + msg.content.substring(2));
 
         }else if(msg.content.startsWith("4")){
-            interests = msg.content.substring(2);
-            message.channel.send("interests: " + msg.content.substring(2));
-
-        }else if(msg.content.startsWith("5")){
             age = msg.content.substring(2);
             message.channel.send("age: " + msg.content.substring(2));
 
         }else if(msg.content.startsWith("9")){
 
             if(userExists){
-                let sql = `UPDATE eventRegister SET name = ?, surname = ?, age = ?, languages = ?, interests = ? WHERE userID = ?`
+                let sql = `UPDATE eventRegister SET name = ?, surname = ?, age = ?, languages = ? WHERE userID = ?`
                             
-                db.run(sql, [name, surname, age, preferedLanguages, interests, msg.author.id], function(error) {
+                db.run(sql, [name, surname, age, preferedLanguages, msg.author.id], function(error) {
                     if(error){
                         msg.channel.send("Problems with database! User has not been saved!");
                         return console.log(error.message);
@@ -54,9 +40,9 @@ var eventRegistry = function eventRegistry(message, name, surname, preferedLangu
                 });
 
             }else{
-                let sql = `INSERT INTO eventRegister (userID, username, name, surname, age, languages ,interests) VALUES(?, ?, ?, ?, ?, ?, ?)`
+                let sql = `INSERT INTO eventRegister (userID, username, name, surname, age, languages) VALUES(?, ?, ?, ?, ?, ?)`
 
-                db.run(sql, [msg.author.id, msg.author.username, name, surname, age, preferedLanguages, interests], function (error) {
+                db.run(sql, [msg.author.id, msg.author.username, name, surname, age, preferedLanguages], function (error) {
                     if(error){
                         msg.channel.send("Problems with database! User has not been created!");
                         return console.log(error.message);
@@ -65,28 +51,35 @@ var eventRegistry = function eventRegistry(message, name, surname, preferedLangu
                     msg.channel.send("user created succesfully");             
                 });
             }
+            collector.stop();
         }
     });
     
     collector.on('end', msg => {
         
-        message.channel.send("5 minutes time has expired, you will need to start all over by command !createUser / !editUser")
+        message.channel.send("Register form closed due to time limit or by closing it manually");
     });
     
 }
 
-var getUserRegistry = function getUserRegistry(sqlite3, user, message){
+var sendInfo = function sendInfo(message, name, surname, preferedLanguages, age){
+    message.channel.send(
+        "```1 -- Name (" + name + ")\n" + 
+        "2 -- Surname (" + surname + ")\n" + 
+        "3 -- Prefered programming languages ("+ preferedLanguages + ")\n" + 
+        "4 -- Age (" + age + ")\n" +
+        "9 -- ACCEPT DATA AND UPDATE USER" +
+        "```")
+}
+
+var getUserRegistry = function getUserRegistry(sqlite3, user, message, command){
     let db = new sqlite3.Database("./database.db");
     let sql = `SELECT * FROM eventRegister WHERE userID = ?`
 
     db.get(sql, [user.id], function(error, row) {
         if(error) return console.log(error.message)
 
-        let name, surname, preferedLanguages, interest, age = "";
-        // let surname = "";
-        // let preferedLanguages = "";
-        // let interests = "";
-        // let age = "";
+        let name = "", surname = "", preferedLanguages = "", age = "";
         let userExists = false;
 
         if(row != undefined){
@@ -94,13 +87,19 @@ var getUserRegistry = function getUserRegistry(sqlite3, user, message){
             name = row.name;
             surname = row.surname;
             preferedLanguages = row.languages;
-            interest = row.interests;
             age = row.age;
         }
 
-        eventRegistry(message, name, surname, preferedLanguages, interests, age, userExists);
+        if(command === "createUser"){
+            message.channel.send("***You are about to create / edit user in database***\n" +
+            "To fill form you need to type number then space and then answer (e.g. for surname it will be \"2 mySurname\")\n")
+            eventRegistry(message, name, surname, preferedLanguages, age, userExists);
+        }else if(command === "getUser"){
+            sendInfo(message, name, surname, preferedLanguages, age);
+        }
     });
 }
     
 module.exports.getUserRegistry = getUserRegistry;
 module.exports.eventRegistry = eventRegistry;
+module.exports.sendInfo = sendInfo;

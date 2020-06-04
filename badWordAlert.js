@@ -88,7 +88,7 @@ var checkIfContains = function checkIfContains(sqlite3, client, message, badWord
     console.log(content);
     // .include doesn't work, because it check if there is strings like that.... 
     // example word hello contains hell, then it triggers
-    // to pervent that i made 2 for loops and checks for words
+    // to pervent that I made 2 "for" loops that checks for exact words
     for(i = 0; i < content.length; i++){
         for(j = 0; j < badWords.length; j++){
             if(content[i] === badWords[j]){
