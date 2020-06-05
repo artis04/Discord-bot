@@ -63,9 +63,7 @@ client.on('message', async message => {
     // }).then(console.log)
     // .catch(console.error);
     // console.log(roles[32]);
-    message.guild.roles.cache.forEach(role => {
-      console.log(role.name);
-    })
+
 
     if(message.channel.type === "dm"){ // dm messages
         if(message.content.toLowerCase().startsWith("!createuser") || message.content.toLowerCase().startsWith("!edituser")){

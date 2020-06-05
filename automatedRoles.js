@@ -1,3 +1,4 @@
+const sqlite3 = require('sqlite3').verbose();
 var makeList = function makeList(){
     // let roleList = []
     // var fs = require('fs');
@@ -47,45 +48,47 @@ var makeList = function makeList(){
 }
 
 
-var createRoles = function createRoles(roleList, message, vote){
-    if(vote === "downVote"){
+var createRoles = function createRoles(roleList, message, vote, user){
+    // roleList[0] -- upvotes 
+    // roleList[1] -- downvotes
+    // roleList[2] -- roleNames and color
+    let db = new sqlite3.Database('./database.db');
+    let sql = "SELECT * FROM votes WHERE userID = ?";
 
-    }else{
-        
-    }
-    console.log();
+    db.get(sql, [user.id], function(error, row) {
+        if(error) return console.log(error.message);
+        console.log(row);
+    
+        if(vote === "downVote"){
+            for(i = 0; i < roleList[1].length; i++){
+                if(row.downVotes.toString() == roleList[1][i]){
+                    // de-Role
+                    sql = `UPDATE votes SET role_index = role_index - 1`
 
-    for(i = 0; i < roleList[2].length; i++){
-        let line = roleList[2][i];
-        let name = line.split(" == ")[0];
-        let color = line.split(" == ")[1];
+                }
+            }
+        }else{
+            for(i = 0; i < roleList[0].length; i++){
+                if(row.upVotes.toString() == roleList[0][i]){
+                    // up-Role
+
+                    createRoleIfNotExists(roleList, i, message);
+                    
+                }
+            }
+        }
+
+
+        // for(i = 0; i < roleList[2].length; i++){
+        //     let line = roleList[2][i];
+        //     let name = line.split(" == ")[0];
+        //     let color = line.split(" == ")[1];
 
 
 
-        // message.guild.roles.create({
-        //     data: {
-        //         name: name,
-        //         color: color,
-        //         permissions: []
-        // },
-        // reason: "INITIALIZED BY BOT WITH ROLES FILE",
-        // }).then(console.log)
-        // .catch(console.error);
-        // console.log(roles[32]);
 
-    }
-    console.log("HALA")
-    // message.guild.roles.create({
-    //     data: {
-    //         name: 'suppper',
-    //         color: 'BLUE',
-    //         permissions: [separatelyj]
-            
-    // },
-    // reason: "INITIALIZED BY BOT WITH ROLES FILE",
-    // }).then(console.log)
-    // .catch(console.error);
-    // console.log(roles[32]);
+        // }
+});
 }
 
 
@@ -122,6 +125,29 @@ function updateRole(sqlite3, user){
         
     });
 
+}
+
+function createRoleIfNotExists(roleList, lineIndex, message){
+    let roleName = roleList[2][lineIndex].split(" == ")[0];
+    let roleColor = roleList[2][lineIndex].split(" == ")[1];
+    let exists = false;
+
+    message.guild.roles.cache.forEach(role => {
+        if(role.name == roleName){
+            exists = true;
+        }
+    });
+
+    if(!exists){
+
+        message.guild.roles.create({
+            data: {
+                name: roleName,
+                color: roleColor,
+                permissions: []
+        },
+        }).catch(console.error);
+    }
 }
 
 module.exports.check = check;

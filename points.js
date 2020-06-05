@@ -124,6 +124,7 @@ function updatePoints(sqlite3, userId){
 
 var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleList){
     let db = new sqlite3.Database('./database.db');
+    let points = 0;
     let sql = "";
 
     sql = `SELECT username FROM votes WHERE userID = ?`
@@ -138,11 +139,13 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
        
         if (positiveVote){
             sql = `UPDATE votes SET upVotes = upVotes + 1, role_points = role_points + 1 WHERE userID = ?`;
-            db.run(sql, [user.id], function(error) {
+            db.run(sql, [user.id], function(error, row) {
                 if (error){
                 message.channel.send("Database error, user is NOT updated");
                 return console.error(error.message);
                 }
+                // points = row.upVotes;
+                Role_giving.createRoles(roleList, message, "upVote", user);
                 // Role_giving.check(sqlite3, roleList, user);
             });
             
@@ -158,18 +161,22 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
            
         }else{
             sql = `UPDATE votes SET downVotes = downVotes + 1 WHERE userID = ?`;
-            db.run(sql, [user.id], function(error){
+            db.run(sql, [user.id], function(error, row){
                 message.channel.send("Database error, user is NOT updated");
                 if(error) return console.log(err.message);
+                console.log(row)
+                // points = row.downVotes;
+                Role_giving.createRoles(roleList, message, "downVote", user);
             });
             sendMessage(message, user, false);
+            
         }
         updatePoints(sqlite3, user.id);  // update points column in database
-        positiveVote ? vote = "downVote" : vote = "upVote";
-        Role_giving.createRoles(roleList, message, vote);
-        // TODO: hello
 
-        // Role_giving.check(sqlite3, roleList, user);
+        
+        
+        positiveVote ? vote = "upVote" : vote = "downVote";
+        // Role_giving.createRoles(roleList, message, vote, user);
     });
 };
 
