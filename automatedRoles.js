@@ -72,8 +72,9 @@ var createRoles = function createRoles(roleList, message, vote, user){
                 if(row.upVotes.toString() == roleList[0][i]){
                     // up-Role
 
-                    createRoleIfNotExists(roleList, i, message);
-                    
+                    createRoleIfNotExistsAndAssingToUser(roleList, i, message, user); // due to syncronized function work i cannot manage to get variable before it continues the code
+                    // Thats why it is in one function
+
                 }
             }
         }
@@ -127,14 +128,16 @@ function updateRole(sqlite3, user){
 
 }
 
-function createRoleIfNotExists(roleList, lineIndex, message){
+function createRoleIfNotExistsAndAssingToUser(roleList, lineIndex, message, user){
     let roleName = roleList[2][lineIndex].split(" == ")[0];
     let roleColor = roleList[2][lineIndex].split(" == ")[1];
     let exists = false;
+    let discordRole;
 
     message.guild.roles.cache.forEach(role => {
         if(role.name == roleName){
             exists = true;
+            discordRole = role;
         }
     });
 
@@ -146,8 +149,18 @@ function createRoleIfNotExists(roleList, lineIndex, message){
                 color: roleColor,
                 permissions: []
         },
-        }).catch(console.error);
+        })
+        .catch(console.error);
     }
+    console.log("#########");
+    console.log(user);
+    // user.roles.add(discordRole);
+
+    // let role = message.guild.roles.cache.find(r => r.name === "noob");
+    // let member = message.mentions.members.first();
+    // member.roles.add(role);
+
+
 }
 
 module.exports.check = check;

@@ -53,17 +53,6 @@ function getAllMentionedUsersOrChannels(message, getUsers){
 
 client.on('message', async message => {
 
-    // message.guild.roles.create({
-    // data: {
-    //     name: "fucking hell",
-    //     color: "BLUE",
-    //     permissions: []
-    // },
-    // reason: "INITIALIZED BY BOT WITH ROLES FILE",
-    // }).then(console.log)
-    // .catch(console.error);
-    // console.log(roles[32]);
-
 
     if(message.channel.type === "dm"){ // dm messages
         if(message.content.toLowerCase().startsWith("!createuser") || message.content.toLowerCase().startsWith("!edituser")){
@@ -167,6 +156,7 @@ client.on('message', async message => {
         //     });
         // }
     }else if(message.content.toLowerCase().startsWith("!settings") && owner){
+
         message.delete();
         const embed = {
             "title": "CURRENT SERVER SETTINGS",
@@ -201,10 +191,10 @@ client.on('message', async message => {
         message.author.send({ embed });
         message.author.send("")
 
-
-
-
-    }else if(message.content === "TEST"){
+      }else if(message.content.startsWith("TET")){
+         let member = message.mentions.members.first();
+          console.log(member);
+      }else if(message.content === "TEST"){
         const embed = {
             "title": "SERVER TOP 10 USERS",
             "description": "",
