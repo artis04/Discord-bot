@@ -90,7 +90,7 @@ client.on('message', async message => {
     badWordAlert.checkIfContains(sqlite3, client, message, badWords);
 
     if(message.content.toLowerCase().startsWith("!upvote") || message.content.toLowerCase().startsWith("!downvote")){
-        message.delete();
+        // message.delete();
         var voted_users = [];
         voted_users = getAllMentionedUsersOrChannels(message, true);
         // list "voted_users" contains all user ID's who have been upvoted or downvoted in message
@@ -204,34 +204,6 @@ client.on('message', async message => {
 
 
 
-    }else if(message.content === "TEST"){
-        // const roles = require("./roles.json");
-        // let points = 1024;
-        // let rolename = "";
-        // for(i in roles){
-        //     if(points.toString() === i){
-        //         rolename = roles[parseInt(i)];
-        //     }
-        // }
-        // console.log(rolename);
-
-
-        //const roles = require("./roles.txt");
-        
-
-        
-
-    //     message.guild.roles.create({
-    //         data: {
-    //             name: 'suppper',
-    //             color: 'BLUE',
-    //             permissions: [separatelyj]
-                
-    //     },
-    //     reacon: "new role for 32 points",
-    // }).then(console.log)
-    //     .catch(console.error);
-    //     console.log(roles[32]);
     }else if(message.content === "TEST"){
         const embed = {
             "title": "SERVER TOP 10 USERS",
