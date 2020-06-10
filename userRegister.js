@@ -63,13 +63,31 @@ var eventRegistry = function eventRegistry(message, name, surname, preferedLangu
 }
 
 var sendInfo = function sendInfo(message, name, surname, preferedLanguages, age){
+    var fs = require('fs');
+    var words = fs.readFileSync('registryForm.txt').toString().split("\n");
+    
+    let myMessage = "";
+    for(i in words){
+        myMessage += `${i + 1} -- ${words[i]} (${})`        
+    }
+
     message.channel.send(
-        "```1 -- Name (" + name + ")\n" + 
-        "2 -- Surname (" + surname + ")\n" + 
-        "3 -- Prefered programming languages ("+ preferedLanguages + ")\n" + 
-        "4 -- Age (" + age + ")\n" +
-        "9 -- ACCEPT DATA AND UPDATE USER" +
-        "```");
+        `\`\`\`
+1 -- Name (${name})
+2 -- Surname (${surname})
+3 -- Prefered programming languages (${preferedLanguages})
+4 -- Age (${age})
+9 -- ACCEPT DATA AND UPDATE USER \`\`\`
+        `
+    );
+
+    // message.channel.send(
+    //     "```1 -- Name (" + name + ")\n" + 
+    //     "2 -- Surname (" + surname + ")\n" + 
+    //     "3 -- Prefered programming languages ("+ preferedLanguages + ")\n" + 
+    //     "4 -- Age (" + age + ")\n" +
+    //     "9 -- ACCEPT DATA AND UPDATE USER" +
+    //     "```");
 }
 
 var getUserRegistry = function getUserRegistry(sqlite3, user, message, command){

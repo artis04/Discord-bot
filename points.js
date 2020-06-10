@@ -53,7 +53,8 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
                         if(usernamesWithSamePoints.length === 1){
                             myMessage = user.username + " is in this place with 1 other user: ";
                         }else{
-                            myMessage = user.username + " is in this place with " + usernamesWithSamePoints.length + " other users: ";
+                            myMessage = `${user.username} is in this place with ${usernamesWithSamePoints.length} other users:`
+                            // myMessage = user.username + " is in this place with " + usernamesWithSamePoints.length + " other users: ";
                         }
 
                         for(i = 0; i < usernamesWithSamePoints.length; i++){
@@ -64,7 +65,8 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
                         
                     }
                     if(serverPlace === ""){
-                        message.channel.send("<@!" + user.id + "> Currently have 0 points");
+                        message.channel.send(`<@!${user.id}> Currently have 0 points`);
+                        //message.channel.send("<@!" + user.id + "> Currently have 0 points");
                     }else if(serverPlace === 1){
                         serverPlace = "1st";
                     }else if(serverPlace === 2){
@@ -74,14 +76,16 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
                     }else{
                         serverPlace = serverPlace + "th";
                     }
-                    message.channel.send("<@!" + user.id + "> has " + votes.points + " points! \n Currently in " + serverPlace + " Place on " + message.guild.name + " server");
+                    message.channel.send(`<@!${user.id}> has ${votes.points} points! \nCurrently in ${serverPlace} place in ${message.guild.name} server.`);
+                    // message.channel.send("<@!" + user.id + "> has " + votes.points + " points! \n Currently in " + serverPlace + " Place on " + message.guild.name + " server");
                 });
             });
         } else {
             sql = `SELECT ` + channel.name + ` FROM channels WHERE userID = ?`;
             db.get(sql, [user.id], function(error, row) {
                 if(error) return console.log(error.message);
-                myMessage = "user <@!" + user.id + "> has " + row[channel.name] + " points in <#" + channel.id + "> channel.";
+                myMessage = `user <@!${user.id}> has ${row[channel.name]} points in <#${channel.id}> channel.`;
+                // myMessage = "user <@!" + user.id + "> has " + row[channel.name] + " points in <#" + channel.id + "> channel.";
                 message.channel.send(myMessage);
             });
         }
@@ -99,7 +103,8 @@ var leaderboard = function leaderboard(sqlite3, message){
         let myMessage = "**===Servers leaderboard===**\n";
         let position = 1;
         for(i = 0; i < rows.length; i++){
-            myMessage += "\n" + position + " -- " + rows[i].username + " with " + rows[i].points + " points.";
+            mymessage += `\n${position} -- ${rows[i].username} with ${rows[i].points} points.`;
+            // myMessage += "\n" + position + " -- " + rows[i].username + " with " + rows[i].points + " points.";
             position++;
         }
         myMessage += "\n\n**=====================**";
@@ -148,8 +153,9 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
                 // Role_giving.check(sqlite3, roleList, user);
             });
             
-            sql = `UPDATE channels SET ` + message.channel.name + ` = ` + message.channel.name + ` + 1 WHERE userID = ?`;
-            db.run(sql, [user.id], function(error) {
+            sql = `UPDATE channels SET ${message.channel.name} = ${message.channel.name} + 1 WHERE userID = ${user.id}`;
+            // sql = `UPDATE channels SET ` + message.channel.name + ` = ` + message.channel.name + ` + 1 WHERE userID = ?`;
+            db.run(sql, function(error) {
                 if(error){
                 message.channel.send("Database error, user is NOT updated");
                 return console.error(error.message);
@@ -181,9 +187,11 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
 
 function sendMessage(message, user, upVote){
     if(upVote){
-        message.channel.send("<@!" + message.author.id + "> upvoted <@!" + user.id + ">");
+        message.channel.send(`<@!${message.author.id}> upvoted <@!${user.id}>`);
+        // message.channel.send("<@!" + message.author.id + "> upvoted <@!" + user.id + ">");
     }else{
-        message.channel.send("<@!" + message.author.id + "> downvoted <@!" + user.id + ">")
+        message.channel.send(`<@!${message.author.id}> downvoted <@!${user.id}>`);
+        // message.channel.send("<@!" + message.author.id + "> downvoted <@!" + user.id + ">")
     }
     // In case mentioning gets annoying:
     /*
@@ -191,19 +199,6 @@ function sendMessage(message, user, upVote){
     */
 }
 
-// var achievement = function achievement(sqlite3, description, mentionedUser, fromUser){
-//     db = new sqlite3.Database('./database.db');
-
-//     sql = "INSERT INTO achivments (username, userID, description, fromUserID, fromUsername) VALUES(?, ?, ?, ?, ?)"
-//     db.run(sql, [mentionedUser.username, mentionedUser.id, description, fromUser.id, fromUser.username], function(error) {
-//         if(error) return console.log(error.message);
-//     });
-
-//     db.close((error) => {
-//         if(error) return console.log(error.message);
-//     });
-// }
 module.exports.sendUserPoints = sendUserPoints;
 module.exports.leaderboard = leaderboard;
 module.exports.addPoints = addPoints;
-// module.exports.achievement = achievement;
