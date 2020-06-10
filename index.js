@@ -5,6 +5,7 @@ const userPoints = require("./points.js");
 const userRegiter = require("./userRegister.js");
 const badWordAlert = require("./badWordAlert.js");
 const automatedRoles = require("./automatedRoles.js");
+const achievements = require("./achievements.js");
 const sqlite3 = require('sqlite3').verbose();
 const client = new Discord.Client();
 
@@ -12,11 +13,6 @@ const client = new Discord.Client();
 client.login(config.token);
 let badWords = badWordAlert.makeList(); // swear and inpolite words
 let roleList = automatedRoles.makeList(); // automatic role giving roles and points
-
-
-// automatedRoles.createRoles(roleList);
-
-
 
 client.on('ready', () => {
   let textChannels = []
@@ -53,7 +49,6 @@ function getAllMentionedUsersOrChannels(message, getUsers){
 
 client.on('message', async message => {
 
-
     if(message.channel.type === "dm"){ // dm messages
         if(message.content.toLowerCase().startsWith("!createuser") || message.content.toLowerCase().startsWith("!edituser")){
           userRegiter.getUserRegistry(sqlite3, message.author, message, "createUser")
@@ -61,6 +56,11 @@ client.on('message', async message => {
           userRegiter.getUserRegistry(sqlite3, message.author, message, "getUser")
         }else if(message.content.toLowerCase().startsWith("!help")){
           message.channel.send("You can type `!createUser` or `!editUser` to automatically sign you in next events.\nYou can type `!info` to get ")
+        }
+
+        else if(message.content.toLowerCase().startsWith("!achievements")){
+          let user = message.author;
+          achievements.showLastTen(sqlite3, user, message, true);
         }
         return; // don't run further code as this is dm
     }
@@ -80,9 +80,23 @@ client.on('message', async message => {
 
     if(message.content.toLowerCase().startsWith("!upvote") || message.content.toLowerCase().startsWith("!downvote")){
         // message.delete();
+
+        // let role = message.guild.roles.cache.find(r => r.name === "noob");
+        // let member = message.mentions.members.first();
+        // member.roles.add(role).catch(console.error);
+
+
         var voted_users = [];
         voted_users = getAllMentionedUsersOrChannels(message, true);
         // list "voted_users" contains all user ID's who have been upvoted or downvoted in message
+        
+        //let teeest = message.guild.members.cache.get("id", parseInt(voted_users[0]));
+        console.log("###############")
+        message.mentions.members.get('id', 317689642545840128);
+        // console.log(message.guild.members.cache.get);
+        // console.log(message.guild.members.cache.get('id', 317689642545840128));
+        
+        //console.log(teeest);
 
         message.content.toLowerCase().startsWith("!upvote") ? positiveVote = true : positiveVote = false;
         // if (message.content.toLowerCase().startsWith("!upvote")){
@@ -132,8 +146,9 @@ client.on('message', async message => {
         // console.log(users);
         // Database.test(sqlite3, client.users.fetch(users));
     }else if(message.content.toLowerCase().startsWith("!leaderboard")){
-        Database.leaderboard(sqlite3, message);
-    }else if(message.content.toLowerCase().startsWith("!achievement")){
+        userPoints.leaderboard(sqlite3, message);
+    }else if(message.content.toLowerCase().startsWith("!achievement ")){
+      message.delete();
         let votedUsers = getAllMentionedUsersOrChannels(message, true);
 
         // let description = "";
@@ -145,7 +160,7 @@ client.on('message', async message => {
             var userInfo = client.users.fetch(votedUsers[i]);
             // userInfo contains id; is_bot?; username; discriminator; avatarID; flags; lastmessageid; lastmessagechannelid
             userInfo.then(user => {
-                Database.achievement(sqlite3, description, user, message.author);
+                achievements.achievement(sqlite3, description, user, message.author, message);
             }).catch(console.error);
         };
         
@@ -155,6 +170,13 @@ client.on('message', async message => {
         //         Database.achievement(sqlite3, description, user, message.author);
         //     });
         // }
+    }else if(message.content.toLowerCase().startsWith("!achievements")){
+      let user = message.author;
+      achievements.showLastTen(sqlite3, user, message, false);
+
+
+
+
     }else if(message.content.toLowerCase().startsWith("!settings") && owner){
 
         message.delete();

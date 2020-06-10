@@ -1,3 +1,4 @@
+const Discord = require("discord.js");
 var sweraAlert = function sweraAlert(sqlite3, client, message){
     let db = new sqlite3.Database('./database.db');
     let messageLink = "https://discordapp.com/channels/" + message.guild.id + "/" + message.channel.id + "/" + message.id;
@@ -9,7 +10,7 @@ var sweraAlert = function sweraAlert(sqlite3, client, message){
 
         lastRow === undefined ? lastRowId = 1 : lastRowId = lastRow.id + 1;
 
-        let sql = `INSERT INTO swearTickets (userID, message, link) VALUES(?, ?, ?)`
+        let sql = `INSERT INTO swearTickets (userID, message, link) VALUES(?, ?, ?)`;
         db.run(sql, [message.author.id, message.content, messageLink], function(error) {
             if(error) return console.log(error.message);
 
@@ -24,6 +25,17 @@ var sweraAlert = function sweraAlert(sqlite3, client, message){
                 
             message.author.send(myMessage);
             client.users.fetch(message.guild.owner.id).then((owner) => {
+              // let embed = new Discord.MessageEmbed()
+              //   .setTitle("***SWEAR WORD ALERT***")
+              //   .setDescription("Someone used bad words on server!")
+              //   .setTimestamp(new Date)
+              //   .setColor(13632027)
+              //   .setFooter(message.guild.name, "https://i.ibb.co/tJQLDCD/index.png")
+              //   .setThumbnail(message.author.avatarURL())
+              //   .setAuthor(client.user.username, "https://i.ibb.co/tJQLDCD/index.png", "https://discordapp.com")
+
+              //   .setUrl(messageLink)
+                
                 const embed = {
                     "title": "***SWEAR WORD ALERT***",
                     "description": "Someone used bad words on server!",
@@ -73,7 +85,7 @@ var sweraAlert = function sweraAlert(sqlite3, client, message){
 }
 
 var makeList = function makeList(){
-    let badWords = []
+    let badWords = [];
     var fs = require('fs');
     var words = fs.readFileSync('bannedWords.txt').toString().split("\n"); // Googles banned words
     for(i in words) {
@@ -85,14 +97,13 @@ var makeList = function makeList(){
 
 var checkIfContains = function checkIfContains(sqlite3, client, message, badWords){
     content = message.content.split(" ");
-    // console.log(content);
     // .include doesn't work, because it check if there is strings like that.... 
     // example word hello contains hell, then it triggers
-    // to pervent that I made 2 "for" loops that checks for exact words
+    // to pervent that I made 2 "for" loops that checks for exact words to be written
     for(i = 0; i < content.length; i++){
         for(j = 0; j < badWords.length; j++){
             if(content[i] === badWords[j]){
-                sweraAlert(sqlite3, client, message)
+                sweraAlert(sqlite3, client, message);
             }
         }
     }

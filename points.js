@@ -7,7 +7,7 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
 
         if(rows === undefined){
             // create new user in database
-            Database.addUser(db, user)
+            Database.addUser(db, user);
         }
         
         if(channel === undefined){ // if empty then there is not mentioned channel
@@ -51,9 +51,9 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
 
                     if(usernamesWithSamePoints.length != 0){
                         if(usernamesWithSamePoints.length === 1){
-                            myMessage = user.username + " is in this place with 1 other user: "
+                            myMessage = user.username + " is in this place with 1 other user: ";
                         }else{
-                            myMessage = user.username + " is in this place with " + usernamesWithSamePoints.length + " other users: "
+                            myMessage = user.username + " is in this place with " + usernamesWithSamePoints.length + " other users: ";
                         }
 
                         for(i = 0; i < usernamesWithSamePoints.length; i++){
@@ -81,7 +81,6 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
             sql = `SELECT ` + channel.name + ` FROM channels WHERE userID = ?`;
             db.get(sql, [user.id], function(error, row) {
                 if(error) return console.log(error.message);
-                // console.log(row);
                 myMessage = "user <@!" + user.id + "> has " + row[channel.name] + " points in <#" + channel.id + "> channel.";
                 message.channel.send(myMessage);
             });
@@ -103,7 +102,7 @@ var leaderboard = function leaderboard(sqlite3, message){
             myMessage += "\n" + position + " -- " + rows[i].username + " with " + rows[i].points + " points.";
             position++;
         }
-        myMessage += "\n\n**=====================**"
+        myMessage += "\n\n**=====================**";
         message.channel.send(myMessage);
 
     });
@@ -127,7 +126,7 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
     let points = 0;
     let sql = "";
 
-    sql = `SELECT username FROM votes WHERE userID = ?`
+    sql = `SELECT username FROM votes WHERE userID = ?`;
     db.get(sql, [user.id], function(error, rows){
         if(error) return console.log(error.message);
         
@@ -164,7 +163,7 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
             db.run(sql, [user.id], function(error, row){
                 message.channel.send("Database error, user is NOT updated");
                 if(error) return console.log(err.message);
-                console.log(row)
+                console.log(row);
                 // points = row.downVotes;
                 Role_giving.createRoles(roleList, message, "downVote", user);
             });
@@ -192,19 +191,19 @@ function sendMessage(message, user, upVote){
     */
 }
 
-var achievement = function achievement(sqlite3, description, mentionedUser, fromUser){
-    db = new sqlite3.Database('./database.db');
+// var achievement = function achievement(sqlite3, description, mentionedUser, fromUser){
+//     db = new sqlite3.Database('./database.db');
 
-    sql = "INSERT INTO achivments (username, userID, description, fromUserID, fromUsername) VALUES(?, ?, ?, ?, ?)"
-    db.run(sql, [mentionedUser.username, mentionedUser.id, description, fromUser.id, fromUser.username], function(error) {
-        if(error) return console.log(error.message);
-    });
+//     sql = "INSERT INTO achivments (username, userID, description, fromUserID, fromUsername) VALUES(?, ?, ?, ?, ?)"
+//     db.run(sql, [mentionedUser.username, mentionedUser.id, description, fromUser.id, fromUser.username], function(error) {
+//         if(error) return console.log(error.message);
+//     });
 
-    db.close((error) => {
-        if(error) return console.log(error.message);
-    });
-}
+//     db.close((error) => {
+//         if(error) return console.log(error.message);
+//     });
+// }
 module.exports.sendUserPoints = sendUserPoints;
 module.exports.leaderboard = leaderboard;
 module.exports.addPoints = addPoints;
-module.exports.achievement = achievement;
+// module.exports.achievement = achievement;

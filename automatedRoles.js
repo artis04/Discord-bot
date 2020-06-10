@@ -1,16 +1,5 @@
 const sqlite3 = require('sqlite3').verbose();
 var makeList = function makeList(){
-    // let roleList = []
-    // var fs = require('fs');
-    // var words = fs.readFileSync('bannedWords.txt').toString().split("\n"); // Googles banned words
-    // for(i in words) {
-    //     roleList.push(words[i]);
-    //     roleList[i] = roleList[i].replace('\r', '').replace('\n', ''); // remove \r and \n tags from list
-    // }
-    // return roleList;
-
-
-
     let roles = [];
     let upvotes = [];
     let downvotes = [];
@@ -63,7 +52,7 @@ var createRoles = function createRoles(roleList, message, vote, user){
             for(i = 0; i < roleList[1].length; i++){
                 if(row.downVotes.toString() == roleList[1][i]){
                     // de-Role
-                    sql = `UPDATE votes SET role_index = role_index - 1`
+                    sql = `UPDATE votes SET role_index = role_index - 1`;
 
                 }
             }
@@ -78,17 +67,6 @@ var createRoles = function createRoles(roleList, message, vote, user){
                 }
             }
         }
-
-
-        // for(i = 0; i < roleList[2].length; i++){
-        //     let line = roleList[2][i];
-        //     let name = line.split(" == ")[0];
-        //     let color = line.split(" == ")[1];
-
-
-
-
-        // }
 });
 }
 
@@ -142,7 +120,6 @@ function createRoleIfNotExistsAndAssingToUser(roleList, lineIndex, message, user
     });
 
     if(!exists){
-
         message.guild.roles.create({
             data: {
                 name: roleName,
@@ -151,9 +128,24 @@ function createRoleIfNotExistsAndAssingToUser(roleList, lineIndex, message, user
         },
         })
         .catch(console.error);
+        discordRole = message.guild.roles.cache.find(role => role.name === roleName);
     }
-    console.log("#########");
+        // let role = message.guild.roles.cache.find(r => r.name === "noob");
+        // let member = message.mentions.members.first();
+        // member.roles.add(role).catch(console.error);
+
+    let member = message.mentions.members.first();
+    console.log("########################");
     console.log(user);
+    
+    console.log("//////////////////////////////");
+    console.log(member);
+    
+    // message.mentions.members.forEach(member => {
+    //     member.roles.add(discordRole);
+    // })
+
+    // member.roles.add(discordRole);
     // user.roles.add(discordRole);
 
     // let role = message.guild.roles.cache.find(r => r.name === "noob");

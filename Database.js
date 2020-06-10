@@ -27,7 +27,8 @@ var createTables = function createTables(sqlite3, textChannels){
             userID INTEGER,
             description TEXT,
             fromUserID INTEGER,
-            fromUsername TEXT
+            fromUsername TEXT,
+            date TEXT
         )`;
 
         db.run(sql, (error) => {
@@ -39,7 +40,7 @@ var createTables = function createTables(sqlite3, textChannels){
         sql = `
         CREATE TABLE IF NOT EXISTS channels (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            userID INTEGER NOT NULL`
+            userID INTEGER NOT NULL`;
     
         for(i = 0;i < textChannels.length; i++){ 
             sql += ",\n" + textChannels[i] + " INTEGER DEFAULT 0"; // creates table named channels. and adds columns by channel names ...
@@ -55,7 +56,7 @@ var createTables = function createTables(sqlite3, textChannels){
             userID INTEGER NOT NULL,
             message TEXT NOT NULL,
             link TEXT NOT NULL
-        )`
+        )`;
 
         db.run(sql, (error) =>{
             if(error) return console.log(error.message);
@@ -69,7 +70,7 @@ var createTables = function createTables(sqlite3, textChannels){
             surname TEXT,
             age INTEGER,
             languages TEXT
-        )`
+        )`;
 
         db.run(sql, (error) => {
             if(error) return console.log(error.message);
@@ -99,7 +100,7 @@ var addUser = function addUser(db, user){
     });
 
     db.close((error) => {
-    if(error) return console.log(error.message)
+    if(error) return console.log(error.message);
     });
 }
 

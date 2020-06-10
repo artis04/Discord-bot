@@ -29,7 +29,7 @@ var eventRegistry = function eventRegistry(message, name, surname, preferedLangu
         }else if(msg.content.startsWith("9")){
 
             if(userExists){
-                let sql = `UPDATE eventRegister SET name = ?, surname = ?, age = ?, languages = ? WHERE userID = ?`
+                let sql = `UPDATE eventRegister SET name = ?, surname = ?, age = ?, languages = ? WHERE userID = ?`;
                             
                 db.run(sql, [name, surname, age, preferedLanguages, msg.author.id], function(error) {
                     if(error){
@@ -40,7 +40,7 @@ var eventRegistry = function eventRegistry(message, name, surname, preferedLangu
                 });
 
             }else{
-                let sql = `INSERT INTO eventRegister (userID, username, name, surname, age, languages) VALUES(?, ?, ?, ?, ?, ?)`
+                let sql = `INSERT INTO eventRegister (userID, username, name, surname, age, languages) VALUES(?, ?, ?, ?, ?, ?)`;
 
                 db.run(sql, [msg.author.id, msg.author.username, name, surname, age, preferedLanguages], function (error) {
                     if(error){
@@ -69,15 +69,15 @@ var sendInfo = function sendInfo(message, name, surname, preferedLanguages, age)
         "3 -- Prefered programming languages ("+ preferedLanguages + ")\n" + 
         "4 -- Age (" + age + ")\n" +
         "9 -- ACCEPT DATA AND UPDATE USER" +
-        "```")
+        "```");
 }
 
 var getUserRegistry = function getUserRegistry(sqlite3, user, message, command){
     let db = new sqlite3.Database("./database.db");
-    let sql = `SELECT * FROM eventRegister WHERE userID = ?`
+    let sql = `SELECT * FROM eventRegister WHERE userID = ?`;
 
     db.get(sql, [user.id], function(error, row) {
-        if(error) return console.log(error.message)
+        if(error) return console.log(error.message);
 
         let name = "", surname = "", preferedLanguages = "", age = "";
         let userExists = false;
