@@ -31,9 +31,6 @@ var makeList = function makeList(){
     return ([upvotes, downvotes, roles]); // MAKE ALL IN ONE LIST
 
 
-    // console.log(upvotes);
-    // console.log(downvotes);
-    // console.log(roles);
 }
 
 
@@ -112,14 +109,17 @@ function createRoleIfNotExistsAndAssingToUser(roleList, lineIndex, message, user
     let exists = false;
     let discordRole;
 
-    message.guild.roles.cache.forEach(role => {
-        if(role.name == roleName){
-            exists = true;
-            discordRole = role;
-        }
-    });
+    // message.guild.roles.cache.forEach(role => {
+    //     if(role.name == roleName){
+    //         exists = true;
+    //         discordRole = role;
+    //     }
+    // });
 
-    if(!exists){
+    discordRole = message.guild.roles.cache.find(role => role.name === roleName);
+
+
+    if(discordRole === undefined){
         message.guild.roles.create({
             data: {
                 name: roleName,
@@ -128,18 +128,20 @@ function createRoleIfNotExistsAndAssingToUser(roleList, lineIndex, message, user
         },
         })
         .catch(console.error);
-        discordRole = message.guild.roles.cache.find(role => role.name === roleName);
+        
     }
+    discordRole = message.guild.roles.cache.find(role => role.name === roleName);
+
         // let role = message.guild.roles.cache.find(r => r.name === "noob");
         // let member = message.mentions.members.first();
         // member.roles.add(role).catch(console.error);
 
-    let member = message.mentions.members.first();
-    console.log("########################");
-    console.log(user);
-    
-    console.log("//////////////////////////////");
-    console.log(member);
+    message.mentions.members.forEach(member => {
+        if(member.id === user.id){
+            member.roles.add(discordRole);
+        }
+    });
+
     
     // message.mentions.members.forEach(member => {
     //     member.roles.add(discordRole);

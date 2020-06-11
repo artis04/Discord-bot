@@ -6,12 +6,28 @@ var eventRegistry = function eventRegistry(message, name, surname, preferedLangu
     const collector = message.channel.createMessageCollector(filter, { time: 3000000 });  // creates message collector for 5 minutes max
 
     sendInfo(message, name, surname, preferedLanguages, age);
-
+    var fs = require('fs');
+    var words = fs.readFileSync('registryForm.txt').toString().split("\n");
+    
     collector.on('collect', msg => {
         if(msg.author.bot) return;
+        
+        // TODO error have to finish it!!!
+        for(i in words){
+            let number = i + 1;
+            if(msg.content.startsWith(number.toString())){
+                if(i < 10){
+                    words[i] = msg.content.substring(2);
+                }else{
+                    words[i] = msg.content.substring(3);
+                }
+                message.channel.send(`${words[i]}: `)
+            }
+        }
+
 
         if(msg.content.startsWith("1")){
-            name = msg.content.substring(2);
+            words[0] = msg.content.substring(2);
             message.channel.send("name: " + msg.content.substring(2));
 
         }else if(msg.content.startsWith("2")){
@@ -27,7 +43,7 @@ var eventRegistry = function eventRegistry(message, name, surname, preferedLangu
             message.channel.send("age: " + msg.content.substring(2));
 
         }else if(msg.content.startsWith("9")){
-
+            console.log(words[0])
             if(userExists){
                 let sql = `UPDATE eventRegister SET name = ?, surname = ?, age = ?, languages = ? WHERE userID = ?`;
                             
@@ -66,10 +82,10 @@ var sendInfo = function sendInfo(message, name, surname, preferedLanguages, age)
     var fs = require('fs');
     var words = fs.readFileSync('registryForm.txt').toString().split("\n");
     
-    let myMessage = "";
-    for(i in words){
-        myMessage += `${i + 1} -- ${words[i]} (${})`        
-    }
+    // let myMessage = "";
+    // for(i in words){
+    //     myMessage += `${i + 1} -- ${words[i]} (${})`        
+    // }
 
     message.channel.send(
         `\`\`\`

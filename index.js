@@ -22,6 +22,9 @@ client.on('ready', () => {
     }
   });
   Database.createTables(sqlite3, textChannels); // creates database with required tables if not created yet.
+
+  client.user.setActivity("FOR CLEAN SERVER", {type: "WATCHING"});
+
 });
 
 
@@ -104,7 +107,19 @@ client.on('message', async message => {
         // }else{
         //     positiveVote = false;
         // };
-     
+      //   let roleName = "noob";
+      //   message.guild.roles.cache.forEach(role => {
+      //     if(role.name == roleName){
+      //         exists = true;
+      //         discordRole = role;
+      //     }
+      // });
+
+      // message.mentions.members.forEach(member => {
+      //   console.log(member);
+      // })
+
+
         for(i = 0; i < voted_users.length; i++){
             var userInfo = client.users.fetch(voted_users[i]);
             // userInfo contains id; is_bot?; username; discriminator; avatarID; flags; lastmessageid; lastmessagechannelid
@@ -146,7 +161,14 @@ client.on('message', async message => {
         // console.log(users);
         // Database.test(sqlite3, client.users.fetch(users));
     }else if(message.content.toLowerCase().startsWith("!leaderboard")){
-        userPoints.leaderboard(sqlite3, message);
+      var isMentionedChannel = false;
+      let channels = [];
+      message.mentions.channels.forEach(channel => {
+        channels.push()
+      });
+
+      if(!isMentionedChannel) userPoints.leaderboard(sqlite3, message);
+    
     }else if(message.content.toLowerCase().startsWith("!achievement ")){
       message.delete();
         let votedUsers = getAllMentionedUsersOrChannels(message, true);

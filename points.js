@@ -103,7 +103,7 @@ var leaderboard = function leaderboard(sqlite3, message){
         let myMessage = "**===Servers leaderboard===**\n";
         let position = 1;
         for(i = 0; i < rows.length; i++){
-            mymessage += `\n${position} -- ${rows[i].username} with ${rows[i].points} points.`;
+            myMessage += `\n${position} -- ${rows[i].username} with ${rows[i].points} points.`;
             // myMessage += "\n" + position + " -- " + rows[i].username + " with " + rows[i].points + " points.";
             position++;
         }
@@ -130,26 +130,31 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
     let db = new sqlite3.Database('./database.db');
     let points = 0;
     let sql = "";
+    let userPoints = 0;
 
-    sql = `SELECT username FROM votes WHERE userID = ?`;
+    sql = `SELECT username, points FROM votes WHERE userID = ?`;
     db.get(sql, [user.id], function(error, rows){
         if(error) return console.log(error.message);
         
         if(rows === undefined){
             // create new user in database
-
+            
             Database.addUser(db, user);
+        }else{
+            userPoints = rows.points;
         }
        
         if (positiveVote){
+            
             sql = `UPDATE votes SET upVotes = upVotes + 1, role_points = role_points + 1 WHERE userID = ?`;
-            db.run(sql, [user.id], function(error, row) {
+            db.all(sql, [user.id], function(error, row) {
                 if (error){
-                message.channel.send("Database error, user is NOT updated");
+                message.channel.send(`Database error, <@${user.id}> user is NOT updated!`);
                 return console.error(error.message);
                 }
                 // points = row.upVotes;
                 Role_giving.createRoles(roleList, message, "upVote", user);
+                
                 // Role_giving.check(sqlite3, roleList, user);
             });
             
@@ -157,23 +162,26 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
             // sql = `UPDATE channels SET ` + message.channel.name + ` = ` + message.channel.name + ` + 1 WHERE userID = ?`;
             db.run(sql, function(error) {
                 if(error){
-                message.channel.send("Database error, user is NOT updated");
-                return console.error(error.message);
+                    message.channel.send(`Database error, <@${user.id}> user is NOT updated!`);
+                    return console.error(error.message);
                 }
-                sendMessage(message, user, true);
+                sendMessage(message, user, true, userPoints + 1); // user points + 1 because it is not updated yet
             })
 
            
         }else{
-            sql = `UPDATE votes SET downVotes = downVotes + 1 WHERE userID = ?`;
-            db.run(sql, [user.id], function(error, row){
-                message.channel.send("Database error, user is NOT updated");
-                if(error) return console.log(err.message);
+            sql = `UPDATE votes SET downVotes = downVotes + 1 WHERE userID = ${user.id}`;
+            db.run(sql, function(error, row){
+                if(error) {
+                    message.channel.send(`Database error, <@${user.id}> user is NOT updated!`);
+                    return console.log(err.message);
+                }
                 console.log(row);
                 // points = row.downVotes;
                 Role_giving.createRoles(roleList, message, "downVote", user);
+                sendMessage(message, user, false, userPoints - 1); // user points - 1 because it is not updated yet
             });
-            sendMessage(message, user, false);
+            
             
         }
         updatePoints(sqlite3, user.id);  // update points column in database
@@ -185,17 +193,15 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
     });
 };
 
-function sendMessage(message, user, upVote){
+function sendMessage(message, user, upVote, points){
     if(upVote){
-        message.channel.send(`<@!${message.author.id}> upvoted <@!${user.id}>`);
-        // message.channel.send("<@!" + message.author.id + "> upvoted <@!" + user.id + ">");
+        message.channel.send(`<@!${message.author.id}> upvoted <@!${user.id}>. Now you have ${points} points`);
     }else{
-        message.channel.send(`<@!${message.author.id}> downvoted <@!${user.id}>`);
-        // message.channel.send("<@!" + message.author.id + "> downvoted <@!" + user.id + ">")
+        message.channel.send(`<@!${message.author.id}> downvoted <@!${user.id}>. Now you have ${points} points`);
     }
     // In case mentioning gets annoying:
     /*
-    message.channel.send(message.author.username + " upvoted " + user.username);
+    message.channel.send(`${message.author.username} upvoted ${user.username}`);
     */
 }
 
