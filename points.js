@@ -94,23 +94,34 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
     });
 }
 
-var leaderboard = function leaderboard(sqlite3, message){
+var leaderboard = function leaderboard(sqlite3, message, channels){
     
     let db = new sqlite3.Database('./database.db');
 //SELECT ROW_NUMBER () OVER (ORDER BY points DESC) rowNumber, userID, points FROM votes
-    db.all(`SELECT * FROM votes ORDER BY points DESC LIMIT 10`, (error, rows) => {
-        if(error) return console.log(error.message);        
-        let myMessage = "**===Servers leaderboard===**\n";
-        let position = 1;
-        for(i = 0; i < rows.length; i++){
-            myMessage += `\n${position} -- ${rows[i].username} with ${rows[i].points} points.`;
-            // myMessage += "\n" + position + " -- " + rows[i].username + " with " + rows[i].points + " points.";
-            position++;
-        }
-        myMessage += "\n\n**=====================**";
-        message.channel.send(myMessage);
 
-    });
+
+    if(channels.length === 0){
+        db.all(`SELECT * FROM votes ORDER BY points DESC LIMIT 10`, (error, rows) => {
+            if(error) return console.log(error.message);        
+            let myMessage = "**===Servers leaderboard===**\n";
+            let position = 1;
+            for(i = 0; i < rows.length; i++){
+                myMessage += `\n${position} -- ${rows[i].username} with ${rows[i].points} points.`;
+                // myMessage += "\n" + position + " -- " + rows[i].username + " with " + rows[i].points + " points.";
+                position++;
+            }
+            myMessage += "\n\n**=====================**";
+            message.channel.send(myMessage);
+
+        });
+    }else{
+        for(i = 0; i < channels.length; i++){
+            db.all(`SELECT * FROM channels ORDER BY ${channels[i].name} DESC LIMIT 10`, (error, rows) => {
+                if(error) return console.log(error.message);
+                console.log(rows);
+            });
+        }
+    }
 }
 
 function updatePoints(sqlite3, userId){

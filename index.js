@@ -161,13 +161,14 @@ client.on('message', async message => {
         // console.log(users);
         // Database.test(sqlite3, client.users.fetch(users));
     }else if(message.content.toLowerCase().startsWith("!leaderboard")){
-      var isMentionedChannel = false;
+      // var isMentionedChannel = false;
       let channels = [];
       message.mentions.channels.forEach(channel => {
-        channels.push()
+        channels.push(channel)
       });
 
-      if(!isMentionedChannel) userPoints.leaderboard(sqlite3, message);
+      userPoints.leaderboard(sqlite3, message, channels);
+      //if(!isMentionedChannel) userPoints.leaderboard(sqlite3, message);
     
     }else if(message.content.toLowerCase().startsWith("!achievement ")){
       message.delete();
@@ -186,12 +187,6 @@ client.on('message', async message => {
             }).catch(console.error);
         };
         
-        // for(i = 0; i < votedUsers; i++){
-        //     client.users.fetch(votedUsers[i]).then(user => {
-        //         console.log(user)
-        //         Database.achievement(sqlite3, description, user, message.author);
-        //     });
-        // }
     }else if(message.content.toLowerCase().startsWith("!achievements")){
       let user = message.author;
       achievements.showLastTen(sqlite3, user, message, false);
