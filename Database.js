@@ -40,6 +40,7 @@ var createTables = function createTables(sqlite3, textChannels){
         sql = `
         CREATE TABLE IF NOT EXISTS channels (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
             userID INTEGER NOT NULL`;
     
         for(i = 0;i < textChannels.length; i++){ 
@@ -94,8 +95,8 @@ var addUser = function addUser(db, user){
         if(error) return console.log(error.message);
     });
 
-    sql = `INSERT INTO channels (userID) VALUES(?)`
-    db.run(sql, [user.id], (error) => {
+    sql = `INSERT INTO channels (username, userID) VALUES(?, ?)`
+    db.run(sql, [user.username, user.id], (error) => {
         if(error) return console.log(error.message);
     });
 

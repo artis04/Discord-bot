@@ -167,7 +167,12 @@ client.on('message', async message => {
         channels.push(channel)
       });
 
-      userPoints.leaderboard(sqlite3, message, channels);
+      let count = 0;
+      do{
+        userPoints.leaderboard(sqlite3, message, channels[count]);
+        count ++;
+      }while(count < channels.length)
+      
       //if(!isMentionedChannel) userPoints.leaderboard(sqlite3, message);
     
     }else if(message.content.toLowerCase().startsWith("!achievement ")){

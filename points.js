@@ -94,18 +94,18 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
     });
 }
 
-var leaderboard = function leaderboard(sqlite3, message, channels){
+var leaderboard = function leaderboard(sqlite3, message, channel){
     
     let db = new sqlite3.Database('./database.db');
 //SELECT ROW_NUMBER () OVER (ORDER BY points DESC) rowNumber, userID, points FROM votes
 
-
-    if(channels.length === 0){
+    let myMessage = "";
+    if(channel === undefined){
         db.all(`SELECT * FROM votes ORDER BY points DESC LIMIT 10`, (error, rows) => {
             if(error) return console.log(error.message);        
-            let myMessage = "**===Servers leaderboard===**\n";
+            myMessage = "**===Servers leaderboard===**\n";
             let position = 1;
-            for(i = 0; i < rows.length; i++){
+            for(i in rows){
                 myMessage += `\n${position} -- ${rows[i].username} with ${rows[i].points} points.`;
                 // myMessage += "\n" + position + " -- " + rows[i].username + " with " + rows[i].points + " points.";
                 position++;
@@ -115,12 +115,17 @@ var leaderboard = function leaderboard(sqlite3, message, channels){
 
         });
     }else{
-        for(i = 0; i < channels.length; i++){
-            db.all(`SELECT * FROM channels ORDER BY ${channels[i].name} DESC LIMIT 10`, (error, rows) => {
-                if(error) return console.log(error.message);
-                console.log(rows);
-            });
-        }
+        db.all(`SELECT * FROM channels ORDER BY ${channel.name} DESC LIMIT 10`, (error, rows) => {
+            if(error) return console.log(error.message);
+            
+            myMessage = `**===<#${channel.id}> leaderboard===**\n`;
+            for(i in rows){
+                let chanelName = channel.name;
+                myMessage += `\n${parseInt(i) + 1} -- ${rows[i].username} with ${rows[i].chanelName} points.`
+            }
+
+            message.channel.send(myMessage);
+        });
     }
 }
 
@@ -187,8 +192,6 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
                     message.channel.send(`Database error, <@${user.id}> user is NOT updated!`);
                     return console.log(err.message);
                 }
-                console.log(row);
-                // points = row.downVotes;
                 Role_giving.createRoles(roleList, message, "downVote", user);
                 sendMessage(message, user, false, userPoints - 1); // user points - 1 because it is not updated yet
             });
