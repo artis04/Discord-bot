@@ -92,34 +92,8 @@ client.on('message', async message => {
         var voted_users = [];
         voted_users = getAllMentionedUsersOrChannels(message, true);
         // list "voted_users" contains all user ID's who have been upvoted or downvoted in message
-        
-        //let teeest = message.guild.members.cache.get("id", parseInt(voted_users[0]));
-        console.log("###############")
-        message.mentions.members.get('id', 317689642545840128);
-        // console.log(message.guild.members.cache.get);
-        // console.log(message.guild.members.cache.get('id', 317689642545840128));
-        
-        //console.log(teeest);
 
         message.content.toLowerCase().startsWith("!upvote") ? positiveVote = true : positiveVote = false;
-        // if (message.content.toLowerCase().startsWith("!upvote")){
-        //     positiveVote = true;
-        // }else{
-        //     positiveVote = false;
-        // };
-      //   let roleName = "noob";
-      //   message.guild.roles.cache.forEach(role => {
-      //     if(role.name == roleName){
-      //         exists = true;
-      //         discordRole = role;
-      //     }
-      // });
-
-      // message.mentions.members.forEach(member => {
-      //   console.log(member);
-      // })
-
-
         for(i = 0; i < voted_users.length; i++){
             var userInfo = client.users.fetch(voted_users[i]);
             // userInfo contains id; is_bot?; username; discriminator; avatarID; flags; lastmessageid; lastmessagechannelid
@@ -237,7 +211,8 @@ client.on('message', async message => {
 
       }else if(message.content.startsWith("TET")){
          let member = message.mentions.members.first();
-          console.log(member);
+
+
       }else if(message.content === "TEST"){
         const embed = {
             "title": "SERVER TOP 10 USERS",

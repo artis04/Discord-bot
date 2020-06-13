@@ -20,7 +20,7 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
                 FROM votes WHERE userID = ?`;
             db.all(sql, [user.id], (error, rows) => {
                 if (error) return console.log(error.message);
-                console.log(rows);
+
                 votes = rows[0];
                 // if (rows === "" || votes.points === null){  // in case user have null points it will show 0
                 //     // No such user registered in database
@@ -64,20 +64,19 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
                         message.channel.send(myMessage);
                         
                     }
+                    
                     if(serverPlace === ""){
                         message.channel.send(`<@!${user.id}> Currently have 0 points`);
-                        //message.channel.send("<@!" + user.id + "> Currently have 0 points");
-                    }else if(serverPlace === 1){
-                        serverPlace = "1st";
-                    }else if(serverPlace === 2){
-                        serverPlace = "2nd";
-                    }else if(serverPlace === 3){
-                        serverPlace = "3rd";
+                    }else if(serverPlace.toString().substring(serverPlace.toString().length - 1) === "1" && serverPlace != 11){
+                        serverPlace += "st";
+                    }else if(serverPlace.toString().substring(serverPlace.toString().length - 1) === "2" && serverPlace != 12){
+                        serverPlace += "nd";
+                    }else if(serverPlace.toString().substring(serverPlace.toString().length - 1) === "3" && serverPlace != 13){
+                        serverPlace += "rd";
                     }else{
-                        serverPlace = serverPlace + "th";
+                        serverPlace += "th";
                     }
                     message.channel.send(`<@!${user.id}> has ${votes.points} points! \nCurrently in ${serverPlace} place in ${message.guild.name} server.`);
-                    // message.channel.send("<@!" + user.id + "> has " + votes.points + " points! \n Currently in " + serverPlace + " Place on " + message.guild.name + " server");
                 });
             });
         } else {
@@ -120,10 +119,10 @@ var leaderboard = function leaderboard(sqlite3, message, channel){
             
             myMessage = `**===<#${channel.id}> leaderboard===**\n`;
             for(i in rows){
-                let chanelName = channel.name;
-                myMessage += `\n${parseInt(i) + 1} -- ${rows[i].username} with ${rows[i].chanelName} points.`
-            }
+                myMessage += `\n${parseInt(i) + 1} -- ${rows[i].username} with ${rows[i][channel.name]} points.`
+            }   // "channels" table doesn't keep count of downvotes, and I don't think it is a bug, because in table "vots" i'm keeping upvotes and downvotes not only points overall
 
+            myMessage += `\n\n**${'='.repeat(channel.name.length + 15)}**` // optional number 15,, for small channel names perfect is 16, but for longer ones 15 is gonna be ok
             message.channel.send(myMessage);
         });
     }
@@ -190,7 +189,7 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
             db.run(sql, function(error, row){
                 if(error) {
                     message.channel.send(`Database error, <@${user.id}> user is NOT updated!`);
-                    return console.log(err.message);
+                    return console.error; // Do like this no errors then!!!!!!!!!!!!!!!!!!!!
                 }
                 Role_giving.createRoles(roleList, message, "downVote", user);
                 sendMessage(message, user, false, userPoints - 1); // user points - 1 because it is not updated yet

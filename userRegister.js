@@ -43,7 +43,6 @@ var eventRegistry = function eventRegistry(message, name, surname, preferedLangu
             message.channel.send("age: " + msg.content.substring(2));
 
         }else if(msg.content.startsWith("9")){
-            console.log(words[0])
             if(userExists){
                 let sql = `UPDATE eventRegister SET name = ?, surname = ?, age = ?, languages = ? WHERE userID = ?`;
                             
