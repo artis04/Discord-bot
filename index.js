@@ -23,7 +23,7 @@ client.on('ready', () => {
   });
   Database.createTables(sqlite3, textChannels); // creates database with required tables if not created yet.
 
-  client.user.setActivity("FOR CLEAN SERVER", {type: "WATCHING"});
+  client.user.setActivity("BEST SERVER", {type: "WATCHING"});
 
 });
 
@@ -38,7 +38,7 @@ function getAllMentionedUsersOrChannels(message, getUsers){
   var specificID = message.content.split(split_string);
   let mentioned = [];
   for(var i = 1; i < specificID.length; i++){
-    try{ // in case there is no valid @mention id (then do catch == skip this.)
+    try{ // in case there is not valid @mention id (then do catch == skip this.)
 
       var valid_id = specificID[i].substring(0, specificID[i].indexOf(">"))
       if (!mentioned.includes(valid_id)){  // pervents to spam one user or channel multiple times at once.
@@ -84,19 +84,14 @@ client.on('message', async message => {
     if(message.content.toLowerCase().startsWith("!upvote") || message.content.toLowerCase().startsWith("!downvote")){
         // message.delete();
 
-        // let role = message.guild.roles.cache.find(r => r.name === "noob");
-        // let member = message.mentions.members.first();
-        // member.roles.add(role).catch(console.error);
-
-
         var voted_users = [];
         voted_users = getAllMentionedUsersOrChannels(message, true);
         // list "voted_users" contains all user ID's who have been upvoted or downvoted in message
 
+        /* Checks if user wants to upvote or downvote other user, and creates bool value "positiveVote" */
         message.content.toLowerCase().startsWith("!upvote") ? positiveVote = true : positiveVote = false;
         for(i = 0; i < voted_users.length; i++){
             var userInfo = client.users.fetch(voted_users[i]);
-            // userInfo contains id; is_bot?; username; discriminator; avatarID; flags; lastmessageid; lastmessagechannelid
             userInfo.then(user => {
                 userPoints.addPoints(sqlite3, positiveVote, user, message, roleList);
             }).catch(console.error);
@@ -132,10 +127,8 @@ client.on('message', async message => {
                 }
             }).catch(console.error);
         }
-        // console.log(users);
-        // Database.test(sqlite3, client.users.fetch(users));
+
     }else if(message.content.toLowerCase().startsWith("!leaderboard")){
-      // var isMentionedChannel = false;
       let channels = [];
       message.mentions.channels.forEach(channel => {
         channels.push(channel)
@@ -165,102 +158,9 @@ client.on('message', async message => {
                 achievements.achievement(sqlite3, description, user, message.author, message);
             }).catch(console.error);
         };
-        
     }else if(message.content.toLowerCase().startsWith("!achievements")){
       let user = message.author;
       achievements.showLastTen(sqlite3, user, message, false);
-
-
-
-
-    }else if(message.content.toLowerCase().startsWith("!settings") && owner){
-
-        message.delete();
-        const embed = {
-            "title": "CURRENT SERVER SETTINGS",
-            "description": "",
-            "url": "https://discordapp.com",
-            "color": 16776966,
-            "timestamp": "2020-05-23T09:38:49.916Z",
-            "footer": {
-              "icon_url": "https://cdn.discordapp.com/embed/avatars/0.png",
-              "text": "footer text"
-            },
-            "author": {
-              "name": message.guild.name,
-              "url": "https://discordapp.com",
-              "icon_url": "https://cdn.discordapp.com/embed/avatars/0.png"
-            },
-            "fields": [
-              {
-                "name": "Up role at points",
-                "value": "32, 64, 82, 91, 1024",
-              },
-              {
-                "name": "Down role at down points",
-                "value": "2, 4, 8, 10, 11, 12, ++",
-              },
-              {
-                "name": "Roles",
-                "value": "avenger, nooby, rookie, magic, goood, labais"
-              }
-            ]
-          };
-        message.author.send({ embed });
-        message.author.send("")
-
-      }else if(message.content.startsWith("TET")){
-         let member = message.mentions.members.first();
-
-
-      }else if(message.content === "TEST"){
-        const embed = {
-            "title": "SERVER TOP 10 USERS",
-            "description": "",
-            "url": "https://discordapp.com",
-            "color": 9854828,
-            "timestamp": "2020-05-23T09:38:49.916Z",
-            "footer": {
-              "icon_url": "https://cdn.discordapp.com/embed/avatars/0.png",
-              "text": "footer text"
-            },
-            "thumbnail": {
-              "url": message.author.avatarURL() // "https://cdn.discordapp.com/embed/avatars/0.png"
-            },
-            "image": {
-              "url": "https://cdn.discordapp.com/embed/avatars/0.png"
-            },
-            "author": {
-              "name": message.guild.name,
-              "url": "https://discordapp.com",
-              "icon_url": "https://cdn.discordapp.com/embed/avatars/0.png"
-            },
-            "fields": [
-              {
-                "name": "TOP 1",
-                "value": "HE IS IN TOP 1"
-              },
-              {
-                "name": "😱",
-                "value": "try exceeding some of them!"
-              },
-              {
-                "name": "🙄",
-                "value": "an informative error should show up, and this view will remain as-is until all issues are fixed"
-              },
-              {
-                "name": "<:thonkang:219069250692841473>",
-                "value": "these last two",
-                "inline": true
-              },
-              {
-                "name": "<:thonkang:219069250692841473>",
-                "value": "are inline fields",
-                "inline": true
-              }
-            ]
-          };
-          message.channel.send({ embed });
-        }
+  }
 });
  

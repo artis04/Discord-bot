@@ -2,7 +2,7 @@ const Database = require("./Database.js");
 const Role_giving = require("./automatedRoles.js");
 var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
     let db = new sqlite3.Database('./database.db');
-    db.get(`SELECT username FROM votes WHERE userID = ?`, [user.id], function(error, rows) {
+    db.get(`SELECT username FROM votes WHERE userID = ${user.id}`, function(error, rows) {
         if(error) return console.log(error.message);
 
         if(rows === undefined){
@@ -10,7 +10,7 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
             Database.addUser(db, user);
         }
         
-        if(channel === undefined){ // if empty then there is not mentioned channel
+        if(channel === undefined){ // if empty then there is not mentioned channel in message
 
             sql = `SELECT
                 ROW_NUMBER () OVER(
@@ -22,10 +22,6 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
                 if (error) return console.log(error.message);
 
                 votes = rows[0];
-                // if (rows === "" || votes.points === null){  // in case user have null points it will show 0
-                //     // No such user registered in database
-                //     votes.points = 0;
-                // }   
 
                 let serverPlace = "";
 

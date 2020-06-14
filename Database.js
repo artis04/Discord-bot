@@ -60,7 +60,9 @@ var createTables = function createTables(sqlite3, textChannels){
         )`;
 
         db.run(sql, (error) =>{
-            if(error) return console.log(error.message);
+            if(error) return console.error;
+
+            // table created successfuly
         });
 
         sql = `CREATE TABLE IF NOT EXISTS eventRegister (
@@ -74,34 +76,38 @@ var createTables = function createTables(sqlite3, textChannels){
         )`;
 
         db.run(sql, (error) => {
-            if(error) return console.log(error.message);
+            if(error) return console.error;
+
+            // table created successfuly
         });
 
     });
 
     
-
+    /* Close Database */
     db.close((error) => {
-        if (error) {
-            return console.error(error.message);
-        }
-        // database closed successfuly
+        if (error) return console.error;
     });
 };
 
 var addUser = function addUser(db, user){
-    sql = `INSERT INTO votes (username, userID) VALUES(?, ?)`;
-    db.run(sql, [user.username, user.id], (error) => {
-        if(error) return console.log(error.message);
+    /* Add new user to "votes" table */
+    sql = `INSERT INTO votes (username, userID) VALUES(${user.username}, ${user.id})`;
+    db.run(sql, (error) => {
+        if(error) return console.error;
     });
+    /* ============================= */
 
+    /* Add user to "channels" table */
     sql = `INSERT INTO channels (username, userID) VALUES(?, ?)`
     db.run(sql, [user.username, user.id], (error) => {
-        if(error) return console.log(error.message);
+        if(error) return console.error;
     });
+    /* ============================= */
 
+    /* Close Database */
     db.close((error) => {
-    if(error) return console.log(error.message);
+        if(error) return console.error;
     });
 }
 

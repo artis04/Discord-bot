@@ -7,25 +7,42 @@ var eventRegistry = function eventRegistry(message, name, surname, preferedLangu
 
     sendInfo(message, name, surname, preferedLanguages, age);
     var fs = require('fs');
-    var words = fs.readFileSync('registryForm.txt').toString().split("\n");
+    var questions = fs.readFileSync('registryForm.txt').toString().split("\n");
     
     collector.on('collect', msg => {
         if(msg.author.bot) return;
         
         // TODO error have to finish it!!!
-        for(i in words){
+        let answers = {
+           
+        };
+
+        let myMessage = "";
+        for(i = 0; i < questions.length; i++){
             let number = i + 1;
             if(msg.content.startsWith(number.toString())){
+                let word;
                 if(i < 10){
-                    words[i] = msg.content.substring(2);
+                    word = msg.content.substring(2);
                 }else{
-                    words[i] = msg.content.substring(3);
+                    word = msg.content.substring(3);
                 }
-                message.channel.send(`${words[i]}: `)
+
+                var obj = {};
+                obj[questions[i]] = answers;
+                answers.push(obj);
+                //answers.push(`${questions[i]}:${word}`);// `"${questions[i]}": "${word}"`;
+                // let index = questions[i];
+                // var new_element = {index : word}
+                // answers.push(new_element);
+                message.channel.send(`${questions[i]}: ${word}`);
             }
         }
+        if(msg.content === "save"){
+            console.log(answers);
+        }
 
-
+        /*
         if(msg.content.startsWith("1")){
             words[0] = msg.content.substring(2);
             message.channel.send("name: " + msg.content.substring(2));
@@ -67,7 +84,7 @@ var eventRegistry = function eventRegistry(message, name, surname, preferedLangu
                 });
             }
             collector.stop();
-        }
+        }*/
     });
     
     collector.on('end', msg => {
