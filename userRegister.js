@@ -1,23 +1,28 @@
-var eventRegistry = function eventRegistry(message, name, surname, preferedLanguages, age, userExists){
-    const sqlite3 = require('sqlite3').verbose();
+var eventRegistry = function eventRegistry(sqlite3, message, userExists){
+    // const sqlite3 = require('sqlite3').verbose();
     let db = new sqlite3.Database("./database.db");
 
     const filter = m => !m.author.bot;
     const collector = message.channel.createMessageCollector(filter, { time: 3000000 });  // creates message collector for 5 minutes max
 
-    sendInfo(message, name, surname, preferedLanguages, age);
+    // sendInfo(message, name, surname, preferedLanguages, age);
     var fs = require('fs');
-    var questions = fs.readFileSync('registryForm.txt').toString().split("\n");
+    var questions = fs.readFileSync('registryForm.txt').toString().split("\r\n");
+
+    message.channel.send(`
+**You are about to create / edit user in database**
+To fill form you need to type number then space and then answer (e.g. for surname it will be "2 mySurname")
+To save details type \`save\`
+To exit without saving type \`exit\``);
+
+    sendInfo(sqlite3, questions, message);
     
+    let myMessage = "";
+    let answers = new Map();
+    let answers1 = {};
     collector.on('collect', msg => {
         if(msg.author.bot) return;
         
-        // TODO error have to finish it!!!
-        let answers = {
-           
-        };
-
-        let myMessage = "";
         for(i = 0; i < questions.length; i++){
             let number = i + 1;
             if(msg.content.startsWith(number.toString())){
@@ -28,128 +33,155 @@ var eventRegistry = function eventRegistry(message, name, surname, preferedLangu
                     word = msg.content.substring(3);
                 }
 
-                var obj = {};
-                obj[questions[i]] = answers;
-                answers.push(obj);
-                //answers.push(`${questions[i]}:${word}`);// `"${questions[i]}": "${word}"`;
-                // let index = questions[i];
-                // var new_element = {index : word}
-                // answers.push(new_element);
-                message.channel.send(`${questions[i]}: ${word}`);
+                if(answers.has(questions[i].split("\r")[0])){
+                    answers.delete(questions[i].split("\r")[0]);
+                }
+                answers.set(questions[i].split("\r")[0], word);
+
+                message.channel.send(`${questions[i].split("\r")[0]}: ${word}`);
+                break;
             }
         }
-        if(msg.content === "save"){
-            console.log(answers);
-        }
 
-        /*
-        if(msg.content.startsWith("1")){
-            words[0] = msg.content.substring(2);
-            message.channel.send("name: " + msg.content.substring(2));
-
-        }else if(msg.content.startsWith("2")){
-            surname = msg.content.substring(2);
-            message.channel.send("surname: " + msg.content.substring(2));
-
-        }else if(msg.content.startsWith("3")){
-            preferedLanguages = msg.content.substring(2);
-            message.channel.send("prefered programming languages: " + msg.content.substring(2));
-
-        }else if(msg.content.startsWith("4")){
-            age = msg.content.substring(2);
-            message.channel.send("age: " + msg.content.substring(2));
-
-        }else if(msg.content.startsWith("9")){
-            if(userExists){
-                let sql = `UPDATE eventRegister SET name = ?, surname = ?, age = ?, languages = ? WHERE userID = ?`;
-                            
-                db.run(sql, [name, surname, age, preferedLanguages, msg.author.id], function(error) {
-                    if(error){
-                        msg.channel.send("Problems with database! User has not been saved!");
-                        return console.log(error.message);
-                    } 
-                    msg.channel.send("User saved succesfully");
-                });
-
-            }else{
-                let sql = `INSERT INTO eventRegister (userID, username, name, surname, age, languages) VALUES(?, ?, ?, ?, ?, ?)`;
-
-                db.run(sql, [msg.author.id, msg.author.username, name, surname, age, preferedLanguages], function (error) {
-                    if(error){
-                        msg.channel.send("Problems with database! User has not been created!");
-                        return console.log(error.message);
-                    } 
-                    
-                    msg.channel.send("user created succesfully");             
-                });
-            }
+        if(msg.content.toLowerCase() === "exit"){
             collector.stop();
-        }*/
+        }else if(msg.content.toLowerCase() === "save"){
+
+            let sql;
+            if(userExists){
+                sql = `UPDATE eventRegister SET `
+                for(i = 0; i < questions.length; i++){
+                    let content = answers.get(questions[i].split("\r")[0])
+                    if(content != undefined){
+                        sql += `${questions[i].split("\r")[0].replace(/\s/g, '_')} = "${content}", `
+                    }
+                }
+                sql = sql.substring(0, sql.length - 2);
+                sql += ` WHERE userID = "${message.author.id}"`;
+
+                db.run(sql, function(error) {
+                    if(error) return console.error;
+                    collector.stop();
+                });
+        }else{
+            sql = `INSERT INTO eventRegister (userID, username, `;
+            for(i = 0; i < questions.length; i++){
+                let content = answers.get(questions[i].split("\r")[0]);
+                if(content != undefined){
+                    sql += `${questions[i].split("\r")[0].replace(/\s/g, '_')}, `;
+                }
+            }
+            sql = sql.substring(0, sql.length - 2);
+            sql += `) VALUES("${message.author.id}", "${message.author.username}", `;
+            for(i = 0; i < questions.length; i++){
+                let content = answers.get(questions[i].split("\r")[0]);
+                if(content != undefined){
+                    sql += `"${content}", `
+                }
+            }
+            sql = sql.substring(0, sql.length - 2);
+            sql += `)`;
+            db.run(sql, function(error) {
+                if(error) return console.error;
+                collector.stop();
+            });
+            
+        }
+        
+    }
+
     });
     
     collector.on('end', msg => {
         
         message.channel.send("Register form closed due to time limit or by closing it manually");
+
+        message.channel.send("Your current user status:");
+        sendInfo(sqlite3, questions, message);
     });
     
 }
 
-var sendInfo = function sendInfo(message, name, surname, preferedLanguages, age){
-    var fs = require('fs');
-    var words = fs.readFileSync('registryForm.txt').toString().split("\n");
-    
-    // let myMessage = "";
-    // for(i in words){
-    //     myMessage += `${i + 1} -- ${words[i]} (${})`        
-    // }
+function sendInfo(sqlite3, questions, message){
+    let db = new sqlite3.Database("./database.db");
+    // var fs = require('fs');
+    // var words = fs.readFileSync('registryForm.txt').toString().split("\n");
+    let sql = `SELECT * FROM eventRegister WHERE userID = ?`;
+    db.get(sql, [message.author.id], function(error, row) {
+        if(error) return console.error;
+        
+        let myMessage = "```";
 
-    message.channel.send(
-        `\`\`\`
-1 -- Name (${name})
-2 -- Surname (${surname})
-3 -- Prefered programming languages (${preferedLanguages})
-4 -- Age (${age})
-9 -- ACCEPT DATA AND UPDATE USER \`\`\`
-        `
-    );
 
-    // message.channel.send(
-    //     "```1 -- Name (" + name + ")\n" + 
-    //     "2 -- Surname (" + surname + ")\n" + 
-    //     "3 -- Prefered programming languages ("+ preferedLanguages + ")\n" + 
-    //     "4 -- Age (" + age + ")\n" +
-    //     "9 -- ACCEPT DATA AND UPDATE USER" +
-    //     "```");
+
+        if(row === undefined){
+            for(i = 0; i < questions.length; i++){
+                myMessage += `${i + 1} -- ${questions[i]} ()\n`;
+            }
+            myMessage += `\`\`\``
+        }else{
+
+            for(i = 0; i < questions.length; i++){
+                let nowMessage = row[questions[i].replace(/\s/g, '_')];
+                if(nowMessage === undefined || nowMessage === null){
+                    nowMessage = row[questions[i]];
+                }
+                if(nowMessage === null || nowMessage === undefined){
+                    nowMessage = "";
+                }
+                myMessage += `${i + 1} -- ${questions[i]} (${nowMessage})\n`;
+            }
+            myMessage += `\`\`\``
+            
+        }
+
+        message.channel.send(myMessage);
+    });
+
 }
 
-var getUserRegistry = function getUserRegistry(sqlite3, user, message, command){
+var getUserRegistry = function getUserRegistry(sqlite3, message, command){
     let db = new sqlite3.Database("./database.db");
     let sql = `SELECT * FROM eventRegister WHERE userID = ?`;
+    db.get(sql, [message.author.id], function(error, row) {
+        if(error) return console.error;
 
-    db.get(sql, [user.id], function(error, row) {
-        if(error) return console.log(error.message);
-
-        let name = "", surname = "", preferedLanguages = "", age = "";
-        let userExists = false;
-
-        if(row != undefined){
+        if(row === undefined){
+            userExists = false;
+        }else{
             userExists = true;
-            name = row.name;
-            surname = row.surname;
-            preferedLanguages = row.languages;
-            age = row.age;
         }
 
-        if(command === "createUser"){
-            message.channel.send("***You are about to create / edit user in database***\n" +
-            "To fill form you need to type number then space and then answer (e.g. for surname it will be \"2 mySurname\")\n")
-            eventRegistry(message, name, surname, preferedLanguages, age, userExists);
-        }else if(command === "getUser"){
-            sendInfo(message, name, surname, preferedLanguages, age);
+        eventRegistry(sqlite3, message, userExists);
+    })
+    
+}
+
+function checkForInterest(sqlite3, message){
+    let db = new sqlite3.Database("./database.db");
+    // let sql = `SELECT * FROM eventRegister WHERE Prefered_programming_languages LIKE '%python%'`;
+
+    var fs = require('fs');
+    var questions = fs.readFileSync('registryForm.txt').toString().split("\r\n");
+
+    let sql = `SELECT * FROM eventRegister`;
+    db.all(sql, function(error, rows) {
+        if(error) return console.error;
+        for(i = 0; i < rows.length; i++){
+            for(j = 0; j < questions.length; j++){
+                let nowMessage = rows[i][questions[j].replace(/\s/g, '_')];
+                if(nowMessage === undefined || nowMessage === null){
+                    nowMessage = rows[i][questions[j]];
+                }
+
+                console.log(nowMessage);
+            }
         }
-    });
+        console.log(rows);
+    })
 }
     
 module.exports.getUserRegistry = getUserRegistry;
 module.exports.eventRegistry = eventRegistry;
-module.exports.sendInfo = sendInfo;
+// module.exports.sendInfo = sendInfo;
+module.exports.checkForInterest = checkForInterest;

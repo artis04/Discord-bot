@@ -13,17 +13,22 @@ const client = new Discord.Client();
 client.login(config.token);
 let badWords = badWordAlert.makeList(); // swear and inpolite words
 let roleList = automatedRoles.makeList(); // automatic role giving roles and points
+let eventChannel;
 
 client.on('ready', () => {
   let textChannels = []
+
   client.channels.cache.forEach(channel => {
     if(channel.type === 'text'){
       textChannels.push(channel.name); // Get all channel names, so to create table in database with channel names
     }
+    if(channel.name === 'events' && channel.type === 'text'){
+      eventChannel = channel;
+    }
   });
   Database.createTables(sqlite3, textChannels); // creates database with required tables if not created yet.
 
-  client.user.setActivity("BEST SERVER", {type: "WATCHING"});
+  client.user.setActivity("best server", {type: "WATCHING"});
 
 });
 
@@ -54,9 +59,9 @@ client.on('message', async message => {
 
     if(message.channel.type === "dm"){ // dm messages
         if(message.content.toLowerCase().startsWith("!createuser") || message.content.toLowerCase().startsWith("!edituser")){
-          userRegiter.getUserRegistry(sqlite3, message.author, message, "createUser")
+          userRegiter.getUserRegistry(sqlite3, message, "createUser")
         }else if(message.content.toLowerCase().startsWith("!info")){
-          userRegiter.getUserRegistry(sqlite3, message.author, message, "getUser")
+          userRegiter.getUserRegistry(sqlite3, message, "getUser")
         }else if(message.content.toLowerCase().startsWith("!help")){
           message.channel.send("You can type `!createUser` or `!editUser` to automatically sign you in next events.\nYou can type `!info` to get ")
         }
@@ -66,6 +71,11 @@ client.on('message', async message => {
           achievements.showLastTen(sqlite3, user, message, true);
         }
         return; // don't run further code as this is dm
+    }
+
+    if(message.channel === eventChannel){
+      userRegiter.checkForInterest(sqlite3, message);
+      return;
     }
 
     let owner = false;

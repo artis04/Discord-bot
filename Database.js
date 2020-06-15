@@ -1,3 +1,5 @@
+const { exit } = require('process');
+
 var createTables = function createTables(sqlite3, textChannels){    
     let db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (error) =>{
         if(error) return console.log(error.message);
@@ -65,15 +67,36 @@ var createTables = function createTables(sqlite3, textChannels){
             // table created successfuly
         });
 
+        var fs = require('fs');
+        var questions = fs.readFileSync('registryForm.txt').toString().split("\n");
+
+
+        // sql = `CREATE TABLE IF NOT EXISTS eventRegister (
+        //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+        //     userID INTEGER NOT NULL,
+        //     username INTEGER NOT NULL,
+        //     name TEXT,
+        //     surname TEXT,
+        //     age INTEGER,
+        //     languages TEXT
+        // )`;
+
         sql = `CREATE TABLE IF NOT EXISTS eventRegister (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             userID INTEGER NOT NULL,
-            username INTEGER NOT NULL,
-            name TEXT,
-            surname TEXT,
-            age INTEGER,
-            languages TEXT
-        )`;
+            username INTEGER NOT NULL, `;
+
+            
+
+        for(i = 0; i < questions.length; i++){
+            let name = questions[i].replace(/\s/g, '_');
+            if(name.substring(name.length - 1) === "_"){
+                name = name.substring(0, questions[i].length - 1);
+            }
+            sql += `${name} TEXT, `;
+        }
+        sql = sql.substring(0, sql.length - 2);
+        sql += ")";
 
         db.run(sql, (error) => {
             if(error) return console.error;
