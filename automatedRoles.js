@@ -34,44 +34,43 @@ var makeList = function makeList(){
 }
 
 
-var createRoles = function createRoles(roleList, message, vote, user){
+var checkPoints = function checkPoints(roleList, message, vote, user){
     // roleList[0] -- upvotes 
     // roleList[1] -- downvotes
     // roleList[2] -- roleNames and color
     let db = new sqlite3.Database('./database.db');
-    let sql = "SELECT * FROM votes WHERE userID = ?";
+    let sql = `SELECT * FROM votes WHERE userID = ${user.id}`;
 
-    db.get(sql, [user.id], function(error, row) {
-        if(error) return console.log(error.message);
+    db.get(sql, function(error, row) {
+        if(error) return console.error;
     
         if(vote === "downVote"){
             for(i = 0; i < roleList[1].length; i++){
-                if(row.downVotes.toString() == roleList[1][i]){
-                    // de-Role
-                    sql = `UPDATE votes SET role_index = role_index - 1`;
-                    deroleUser(roleList, i, message, user, row.role_points);
+                if((row.downVotes.toString() == roleList[1][i] || roleList[1][i] == "+=1") && row.role_points >= roleList[0][0]){
+                    // down-Role
+                    deroleUser(roleList, message, user, row.role_points, "down");
+                    message.channel.send(`😕Bad news, <@!${user.id}> just down-Roled by 1 role`);
                 }
             }
         }else{
             for(i = 0; i < roleList[0].length; i++){
                 if(row.upVotes.toString() == roleList[0][i]){
                     // up-Role
-                    createRoleIfNotExistsAndAssingToUser(roleList, i, message, user); 
-
-
-
+                    createRoleIfNotExistsAndAssingToUser(roleList, i, message, user, "up"); 
+                    message.channel.send(`Congratulations <@!${user.id}>, you just up-Roled to a new role!🎉🎊🎉🎊`);
                 }
             }
         }
 });
 }
 
-function deroleUser(roleList, lineIndex, message, user, rolePoints){
+function deroleUser(roleList, message, user, rolePoints){
+    let db = new sqlite3.Database('./database.db');
     let sql = `UPDATE votes SET role_points = 0  WHERE userID = ${user.id}`;
 
     for(i in roleList[0]){
         if(roleList[0][parseInt(i)+1] === undefined){
-            // reached more than last last upvote number!
+            // user reached more than last upvote number in roles.txt!
             sql = `UPDATE votes SET role_points = ${roleList[0][i - 1]}`;
             break;
         }
@@ -79,63 +78,65 @@ function deroleUser(roleList, lineIndex, message, user, rolePoints){
         if(parseInt(roleList[0][i]) <= rolePoints && (parseInt(roleList[0][parseInt(i) + 1]) > rolePoints)){ 
             roleList[0][i-1] === undefined ? pts = 0 : pts = roleList[0][i-1];
 
+            /* Remove points to starting at previous role */
             sql = `UPDATE votes SET role_points = ${parseInt(pts)} WHERE userID = ${user.id}`;
-
-            //let roleName = roleList[2][lineIndex].split(" == ")[0];
-        
-            //let discordRole = message.guild.roles.cache.find(role => role.name === roleName);
-            createRoleIfNotExistsAndAssingToUser(roleList, i, message, user);
-
+            createRoleIfNotExistsAndAssingToUser(roleList, parseInt(i) + 1, message, user, "down");
             break;
         }
     }
-    console.log(sql);
-    // db.run(sql, function(error) {
-    //     if(error) return console.log(console.log(error.message))
-
-    // })
+    db.run(sql, function(error) {
+        if(error) return console.error;
+    });
 }
 
-async function createRoleIfNotExistsAndAssingToUser(roleList, lineIndex, message, user){
+async function createRoleIfNotExistsAndAssingToUser(roleList, lineIndex, message, user, vote){
 
     /* remove previous roles */
-    let lowerDiscordRole = message.guild.roles.cache.find(role => role.name === roleList[2][lineIndex - 1].split(" == ")[0]);
-    let higherDiscordRole = message.guild.roles.cache.find(role => role.name === roleList[2][listIndex + 1].split(" == ")[0]);
-
-    message.mentions.members.forEach(member => {
-        if(member.id === user.id){
-            member.roles.remove(lowerDiscordRole);
-            member.roles.remove(higherDiscordRole);
-        }
-    })
-    /* ====================== */
-
-    /* Create role if not exists */
-    let roleName = roleList[2][lineIndex].split(" == ")[0];
-    let roleColor = roleList[2][lineIndex].split(" == ")[1];
-    let discordRole = message.guild.roles.cache.find(role => role.name === roleName);
-
-    if(discordRole === undefined){
+    let lowerDiscordRole;
+    let higherDiscordRole;
+    let currentDiscordRole;
+    try {lowerDiscordRole = message.guild.roles.cache.find(role => role.name === roleList[2][parseInt(lineIndex) - 2].split(" == ")[0]);}catch{}
+    try {currentDiscordRole = message.guild.roles.cache.find(role => role.name === roleList[2][parseInt(lineIndex) - 1].split(" == ")[0]); }catch{}
+    try {higherDiscordRole = message.guild.roles.cache.find(role => role.name === roleList[2][parseInt(lineIndex)].split(" == ")[0]);}catch{}
+    
+    if(higherDiscordRole === undefined){
+        /* Create role */
+        let roleName = roleList[2][lineIndex].split(" == ")[0];
+        let roleColor = roleList[2][lineIndex].split(" == ")[1];
         await message.guild.roles.create({
             data: {
                 name: roleName,
                 color: roleColor,
                 permissions: []
-        },
-        })
-        .catch(console.error);
-        discordRole = message.guild.roles.cache.find(role => role.name === roleName);
+            },
+        }).catch(console.error);
+        higherDiscordRole = message.guild.roles.cache.find(role => role.name === roleList[2][parseInt(lineIndex)].split(" == ")[0]);
     }
-    /* ========================= */
 
-    /* Assign new role for that member */
+    /* If 1 lower role is deleted or smthing, then my code will remove from user role and will not create new one */
+    // BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG
+
     message.mentions.members.forEach(member => {
         if(member.id === user.id){
-            member.roles.add(discordRole);
+            if(vote === "down"){
+                if(lowerDiscordRole === undefined){
+                    member.roles.remove(currentDiscordRole);
+                }else{
+                    member.roles.add(lowerDiscordRole);
+                    member.roles.remove(currentDiscordRole);
+                }
+            }else{
+                if(currentDiscordRole === undefined){
+                    member.roles.add(higherDiscordRole);
+                }else{
+                    member.roles.add(higherDiscordRole);
+                    member.roles.remove(currentDiscordRole);
+                }
+            }
+        
         }
-    });
-    /* =============================== */
+    })
 }
 
 module.exports.makeList = makeList;
-module.exports.createRoles = createRoles;
+module.exports.checkPoints = checkPoints;

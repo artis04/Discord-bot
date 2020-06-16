@@ -2,7 +2,7 @@ const { exit } = require('process');
 
 var createTables = function createTables(sqlite3, textChannels){    
     let db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (error) =>{
-        if(error) return console.log(error.message);
+        if(error) return console.log(error);
 
         let sql = `
         CREATE TABLE IF NOT EXISTS votes (
@@ -12,12 +12,11 @@ var createTables = function createTables(sqlite3, textChannels){
             upVotes INTEGER DEFAULT 0,
             downVotes INTEGER DEFAULT 0,
             points INTEGER DEFAULT 0,
-            role_points INTEGER DEFAULT 0,
-            role_index INTEGER DEFAULT 0
+            role_points INTEGER DEFAULT 0
         )`;
 
         db.run(sql, (error) => {
-            if(error) return console.log(error.message);
+            if(error) return console.log(error);
 
             // table created successfuly
         });
@@ -30,11 +29,11 @@ var createTables = function createTables(sqlite3, textChannels){
             description TEXT,
             fromUserID INTEGER,
             fromUsername TEXT,
-            date TEXT
+            date DATE
         )`;
 
         db.run(sql, (error) => {
-            if(error) return console.log(error.message);
+            if(error) return console.log(error);
 
             // table created successfuly
         });
@@ -51,35 +50,25 @@ var createTables = function createTables(sqlite3, textChannels){
         sql += `);`
 
         db.run(sql, (error) => {
-            if(error) return console.log(error.message);
+            if(error) return console.log(error);
         });
 
         sql = `CREATE TABLE IF NOT EXISTS swearTickets (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             userID INTEGER NOT NULL,
             message TEXT NOT NULL,
-            link TEXT NOT NULL
+            link TEXT NOT NULL,
+            time DATE
         )`;
 
         db.run(sql, (error) =>{
-            if(error) return console.error;
+            if(error) return console.log(error);
 
             // table created successfuly
         });
 
         var fs = require('fs');
         var questions = fs.readFileSync('registryForm.txt').toString().split("\n");
-
-
-        // sql = `CREATE TABLE IF NOT EXISTS eventRegister (
-        //     id INTEGER PRIMARY KEY AUTOINCREMENT,
-        //     userID INTEGER NOT NULL,
-        //     username INTEGER NOT NULL,
-        //     name TEXT,
-        //     surname TEXT,
-        //     age INTEGER,
-        //     languages TEXT
-        // )`;
 
         sql = `CREATE TABLE IF NOT EXISTS eventRegister (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -99,7 +88,7 @@ var createTables = function createTables(sqlite3, textChannels){
         sql += ")";
 
         db.run(sql, (error) => {
-            if(error) return console.error;
+            if(error) return console.log(error);
 
             // table created successfuly
         });
@@ -109,28 +98,28 @@ var createTables = function createTables(sqlite3, textChannels){
     
     /* Close Database */
     db.close((error) => {
-        if (error) return console.error;
+        if (error) return console.log(error);
     });
 };
 
 var addUser = function addUser(db, user){
     /* Add new user to "votes" table */
-    sql = `INSERT INTO votes (username, userID) VALUES(${user.username}, ${user.id})`;
+    sql = `INSERT INTO votes (username, userID) VALUES("${user.username}", "${user.id}")`;
     db.run(sql, (error) => {
-        if(error) return console.error;
+        if(error) return console.log(error);
     });
     /* ============================= */
 
     /* Add user to "channels" table */
     sql = `INSERT INTO channels (username, userID) VALUES(?, ?)`
     db.run(sql, [user.username, user.id], (error) => {
-        if(error) return console.error;
+        if(error) return console.log(error);
     });
     /* ============================= */
 
     /* Close Database */
     db.close((error) => {
-        if(error) return console.error;
+        if(error) return console.log(error);
     });
 }
 

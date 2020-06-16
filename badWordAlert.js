@@ -12,8 +12,12 @@ var sweraAlert = function sweraAlert(sqlite3, client, message){
         lastRow === undefined ? lastRowId = 1 : lastRowId = lastRow.id + 1;
 
         /* Create new row in "swearTickets" table */
-        let sql = `INSERT INTO swearTickets (userID, message, link) VALUES(?, ?, ?)`;
-        db.run(sql, [message.author.id, message.content, messageLink], function(error) {
+        let date = new Date;
+        date = date.toString().split(" GMT+")[0];
+        date += ` (GMT+3)`;
+    
+        let sql = `INSERT INTO swearTickets (userID, message, link, time) VALUES(?, ?, ?, ?)`;
+        db.run(sql, [message.author.id, message.content, messageLink, date], function(error) {
             if(error) return console.error;
 
             /* Send warning message to messages author */

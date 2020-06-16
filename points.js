@@ -3,7 +3,7 @@ const Role_giving = require("./automatedRoles.js");
 var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
     let db = new sqlite3.Database('./database.db');
     db.get(`SELECT username FROM votes WHERE userID = ${user.id}`, function(error, rows) {
-        if(error) return console.log(error.message);
+        if(error) return console.error;
 
         if(rows === undefined){
             // create new user in database
@@ -19,38 +19,39 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
                 points
                 FROM votes WHERE userID = ?`;
             db.all(sql, [user.id], (error, rows) => {
-                if (error) return console.log(error.message);
+                if (error) return console.error;
 
                 votes = rows[0];
 
                 let serverPlace = "";
 
                 db.all(`SELECT ROW_NUMBER () OVER (ORDER BY points DESC) rowNumber, username, userID, points FROM votes`, (error, rows) => {
-                    if(error) return console.log(error.message);
+                    if(error) return console.error;
 
                     for(let i = 0; i < rows.length;i++){
-                        // console.log(rows[i].userID.toString().slice(0, 16));
-                        // console.log(user.id.slice(0, 16)); // error
-                        if (rows[i].userID.toString().slice(0, 16) == user.id.slice(0, 16)){
+                        // if (rows[i].userID.toString().slice(0, 16) == user.id.slice(0, 16)){
+                            /*
+                            As sqlite INTEGER stores 32-bit numbers, it can have some kind of problems with userID, that's why i check with username
+                            */
+                        if(rows[i].username === user.username){
                             serverPlace = rows[i].rowNumber;
                             pts = rows[i];
                         }
                     }
 
+                    /* OPTIONAL shows how many and whic users are with the same points when typed "!points" */
                     usernamesWithSamePoints = [];
                     for(i = 0;i < rows.length; i++){
                         if(rows[i].points === pts.points && rows[i].userID != pts.userID){
                             usernamesWithSamePoints.push(rows[i].username);
                         }
                     }
-
-
+                    
                     if(usernamesWithSamePoints.length != 0){
                         if(usernamesWithSamePoints.length === 1){
                             myMessage = user.username + " is in this place with 1 other user: ";
                         }else{
                             myMessage = `${user.username} is in this place with ${usernamesWithSamePoints.length} other users:`
-                            // myMessage = user.username + " is in this place with " + usernamesWithSamePoints.length + " other users: ";
                         }
 
                         for(i = 0; i < usernamesWithSamePoints.length; i++){
@@ -60,6 +61,7 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
                         message.channel.send(myMessage);
                         
                     }
+                    /* ====================================================================================== */
                     
                     if(serverPlace === ""){
                         message.channel.send(`<@!${user.id}> Currently have 0 points`);
@@ -76,11 +78,10 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
                 });
             });
         } else {
-            sql = `SELECT ` + channel.name + ` FROM channels WHERE userID = ?`;
+            sql = `SELECT ${channel.name} FROM channels WHERE userID = ?`;
             db.get(sql, [user.id], function(error, row) {
-                if(error) return console.log(error.message);
+                if(error) return console.error;
                 myMessage = `user <@!${user.id}> has ${row[channel.name]} points in <#${channel.id}> channel.`;
-                // myMessage = "user <@!" + user.id + "> has " + row[channel.name] + " points in <#" + channel.id + "> channel.";
                 message.channel.send(myMessage);
             });
         }
@@ -97,7 +98,7 @@ var leaderboard = function leaderboard(sqlite3, message, channel){
     let myMessage = "";
     if(channel === undefined){
         db.all(`SELECT * FROM votes ORDER BY points DESC LIMIT 10`, (error, rows) => {
-            if(error) return console.log(error.message);        
+            if(error) return console.error;        
             myMessage = "**===Servers leaderboard===**\n";
             let position = 1;
             for(i in rows){
@@ -111,7 +112,7 @@ var leaderboard = function leaderboard(sqlite3, message, channel){
         });
     }else{
         db.all(`SELECT * FROM channels ORDER BY ${channel.name} DESC LIMIT 10`, (error, rows) => {
-            if(error) return console.log(error.message);
+            if(error) return console.error;
             
             myMessage = `**===<#${channel.id}> leaderboard===**\n`;
             for(i in rows){
@@ -145,12 +146,14 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
 
     sql = `SELECT username, points FROM votes WHERE userID = ?`;
     db.get(sql, [user.id], function(error, rows){
-        if(error) return console.log(error.message);
+        if(error) return console.error;
         
+        let userJustCreated = false;
         if(rows === undefined){
             // create new user in database
             
             Database.addUser(db, user);
+            userJustCreated = true;
         }else{
             userPoints = rows.points;
         }
@@ -160,13 +163,13 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
             sql = `UPDATE votes SET upVotes = upVotes + 1, role_points = role_points + 1 WHERE userID = ?`;
             db.all(sql, [user.id], function(error, row) {
                 if (error){
-                message.channel.send(`Database error, <@${user.id}> user is NOT updated!`);
-                return console.error(error.message);
+                    message.channel.send(`Database error, <@${user.id}> user is NOT updated!`);
+                    return console.error(error.message);
                 }
-                // points = row.upVotes;
-                Role_giving.createRoles(roleList, message, "upVote", user);
-                
-                // Role_giving.check(sqlite3, roleList, user);
+                if(!userJustCreated){
+                    Role_giving.checkPoints(roleList, message, "upVote", user);
+                }
+
             });
             
             sql = `UPDATE channels SET ${message.channel.name} = ${message.channel.name} + 1 WHERE userID = ${user.id}`;
@@ -185,9 +188,9 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
             db.run(sql, function(error, row){
                 if(error) {
                     message.channel.send(`Database error, <@${user.id}> user is NOT updated!`);
-                    return console.error; // Do like this no errors then!!!!!!!!!!!!!!!!!!!!
+                    return console.error;
                 }
-                Role_giving.createRoles(roleList, message, "downVote", user);
+                Role_giving.checkPoints(roleList, message, "downVote", user);
                 sendMessage(message, user, false, userPoints - 1); // user points - 1 because it is not updated yet
             });
             

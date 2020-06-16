@@ -59,11 +59,9 @@ client.on('message', async message => {
 
     if(message.channel.type === "dm"){ // dm messages
         if(message.content.toLowerCase().startsWith("!createuser") || message.content.toLowerCase().startsWith("!edituser")){
-          userRegiter.getUserRegistry(sqlite3, message, "createUser")
-        }else if(message.content.toLowerCase().startsWith("!info")){
-          userRegiter.getUserRegistry(sqlite3, message, "getUser")
+          userRegiter.getUserRegistry(sqlite3, message);
         }else if(message.content.toLowerCase().startsWith("!help")){
-          message.channel.send("You can type `!createUser` or `!editUser` to automatically sign you in next events.\nYou can type `!info` to get ")
+          message.channel.send("You can type `!createUser` or `!editUser` to automatically send you notification about events which you might like.");
         }
 
         else if(message.content.toLowerCase().startsWith("!achievements")){
@@ -72,16 +70,18 @@ client.on('message', async message => {
         }
         return; // don't run further code as this is dm
     }
+
+    /* Test purpuse */
     if(message.content === "jahoo"){
       let embed = new Discord.MessageEmbed();
-      embed.setTitle("This is python title, today you are going to learn")
-      embed.setDescription("codning ans so on also RubY and GO, java-script and jaVa");
+      embed.setTitle("This is python3 title, today you are going to learn")
+      embed.setDescription("coding ans so on also RubY and GzO, java-script and ja12Va");
       // message.channel.send({ embed });
       eventChannel.send({ embed })
     }
+    /* ============ */
     if(message.channel === eventChannel){
       userRegiter.checkForInterest(sqlite3, client, message);
-
       return;
     }
 
@@ -95,11 +95,11 @@ client.on('message', async message => {
         }
     }catch{}
 
-    // Deal with banned words //
+    /* Deal with banned words */
     badWordAlert.checkIfContains(sqlite3, client, message, badWords);
 
     if(message.content.toLowerCase().startsWith("!upvote") || message.content.toLowerCase().startsWith("!downvote")){
-        // message.delete();
+        message.delete();
 
         var voted_users = [];
         voted_users = getAllMentionedUsersOrChannels(message, true);
@@ -157,13 +157,10 @@ client.on('message', async message => {
         count ++;
       }while(count < channels.length)
       
-      //if(!isMentionedChannel) userPoints.leaderboard(sqlite3, message);
-    
-    }else if(message.content.toLowerCase().startsWith("!achievement ")){
+    }else if(message.content.toLowerCase().startsWith("!achievement ") && (sensei || owner)){
       message.delete();
         let votedUsers = getAllMentionedUsersOrChannels(message, true);
 
-        // let description = "";
         let description = message.content.split("<@!");
         description = description[description.length - 1];
         description = description.substring(20, description.length);
@@ -175,8 +172,9 @@ client.on('message', async message => {
                 achievements.achievement(sqlite3, description, user, message.author, message);
             }).catch(console.error);
         };
-    }else if(message.content.toLowerCase().startsWith("!achievements")){
-      let user = message.author;
+    }else if(message.content.toLowerCase().startsWith("!achievements") || (message.content.toLowerCase().startsWith("!achievement") && !(sensei || owner))){
+      let user = message.mentions.users.first();
+      if(user === undefined) user = message.author;
       achievements.showLastTen(sqlite3, user, message, false);
   }
 });

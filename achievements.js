@@ -1,8 +1,7 @@
 var achievement = function achievement(sqlite3, description, mentionedUser, fromUser, message){
     db = new sqlite3.Database('./database.db');
     let date = new Date;
-    date = date.toString().split(" GMT+");
-    date = date[0];
+    date = date.toString().split(" GMT+")[0];
     date += ` (GMT+3)`;
 
     /* Add new row in database "achievements" table */
@@ -12,12 +11,12 @@ var achievement = function achievement(sqlite3, description, mentionedUser, from
             message.channel.send("**Failed to communicate with database! achievement has not been saved!!!**");
             return console.error;
         }
-        message.channel.send(`<@!${mentionedUser.id}> Congratulations 🎉🎉 you have got new achievement from <@!${fromUser.id}>\nReason:"${description}"`);
+        message.channel.send(`<@!${mentionedUser.id}> Congratulations 🎉🎉 you have got new achievement from <@!${fromUser.id}>\nDescription:"${description}"`);
     });
 
     /* Close Database */
     db.close((error) => {
-        if(error) return console.log(error.message);
+        if(error) return console.error;
     });
 }
 

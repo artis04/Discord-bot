@@ -1,13 +1,11 @@
 const { title } = require('process');
 
 var eventRegistry = function eventRegistry(sqlite3, message, userExists){
-    // const sqlite3 = require('sqlite3').verbose();
     let db = new sqlite3.Database("./database.db");
 
     const filter = m => !m.author.bot;
     const collector = message.channel.createMessageCollector(filter, { time: 3000000 });  // creates message collector for 5 minutes max
 
-    // sendInfo(message, name, surname, preferedLanguages, age);
     var fs = require('fs');
     var questions = fs.readFileSync('registryForm.txt').toString().split("\r\n");
 
@@ -19,12 +17,9 @@ To exit without saving type \`exit\``);
 
     sendInfo(sqlite3, questions, message);
     
-    let myMessage = "";
     let answers = new Map();
-    let answers1 = {};
     collector.on('collect', msg => {
-        if(msg.author.bot) return;
-        
+        /* Checks if message starts with numbers */
         for(i = 0; i < questions.length; i++){
             let number = i + 1;
             if(msg.content.startsWith(number.toString())){
@@ -45,8 +40,11 @@ To exit without saving type \`exit\``);
             }
         }
 
+        /* If typed Exit then stop collector without saving */
         if(msg.content.toLowerCase() === "exit"){
             collector.stop();
+
+        /* When typed save then stop collector and save data to database */
         }else if(msg.content.toLowerCase() === "save"){
 
             let sql;
@@ -55,7 +53,7 @@ To exit without saving type \`exit\``);
                 for(i = 0; i < questions.length; i++){
                     let content = answers.get(questions[i].split("\r")[0])
                     if(content != undefined){
-                        sql += `${questions[i].split("\r")[0].replace(/\s/g, '_')} = "${content}", `
+                        sql += `${questions[i].split("\r")[0].replace(/\s/g, '_')} = "${content}", `; /* Removes space for column names, for database */
                     }
                 }
                 sql = sql.substring(0, sql.length - 2);
@@ -66,11 +64,12 @@ To exit without saving type \`exit\``);
                     collector.stop();
                 });
         }else{
+            /* If user does not exist in database, then create new user */
             sql = `INSERT INTO eventRegister (userID, username, `;
             for(i = 0; i < questions.length; i++){
                 let content = answers.get(questions[i].split("\r")[0]);
                 if(content != undefined){
-                    sql += `${questions[i].split("\r")[0].replace(/\s/g, '_')}, `;
+                    sql += `${questions[i].split("\r")[0].replace(/\s/g, '_')}, `; /* Removes space */
                 }
             }
             sql = sql.substring(0, sql.length - 2);
@@ -99,22 +98,19 @@ To exit without saving type \`exit\``);
         message.channel.send("Register form closed due to time limit or by closing it manually");
 
         message.channel.send("Your current user status:");
-        sendInfo(sqlite3, questions, message);
+        sendInfo(sqlite3, questions, message); // When collector stopped, then send info
     });
     
 }
 
 function sendInfo(sqlite3, questions, message){
     let db = new sqlite3.Database("./database.db");
-    // var fs = require('fs');
-    // var words = fs.readFileSync('registryForm.txt').toString().split("\n");
+
     let sql = `SELECT * FROM eventRegister WHERE userID = ?`;
     db.get(sql, [message.author.id], function(error, row) {
         if(error) return console.error;
         
         let myMessage = "```";
-
-
 
         if(row === undefined){
             for(i = 0; i < questions.length; i++){
@@ -142,7 +138,7 @@ function sendInfo(sqlite3, questions, message){
 
 }
 
-var getUserRegistry = function getUserRegistry(sqlite3, message, command){
+var getUserRegistry = function getUserRegistry(sqlite3, message){
     let db = new sqlite3.Database("./database.db");
     let sql = `SELECT * FROM eventRegister WHERE userID = ?`;
     db.get(sql, [message.author.id], function(error, row) {
@@ -167,11 +163,11 @@ function checkForInterest(sqlite3, client, message){
     var questions = fs.readFileSync('registryForm.txt').toString().split("\r\n");
 
     message.embeds.forEach((embed) => {
-        description = embed.description.toLowerCase().replace(/\,/g,'');
+        description = embed.description.toLowerCase().replace(/\,/g,''); /* Removes , from strings */
         messageTitle = embed.title.toLowerCase().replace(/\,/g,'');
     })
     description = description.split(" ");
-    messageTitle = messageTitle.split(" "); // get words as lists
+    messageTitle = messageTitle.split(" "); // get words as lists from embed title and description
 
     let sql = `SELECT * FROM eventRegister`;
     db.all(sql, function(error, rows) {
@@ -193,11 +189,10 @@ function checkForInterest(sqlite3, client, message){
                 /* My name is Artis and if event message contains word "is" i cannot use .include....
                     Have to use loads of "for" loops, I really don't like it */ // Or just not check for name / surname ... column
 
-                nowMessage = nowMessage.replace(/\,/g,'').replace(/\./g,'').split(" ");
+                nowMessage = nowMessage.replace(/\,/g,'').replace(/\./g,'').split(" "); // Remove , and . from strings ans split in words
                 for(word = 0; word < messageTitle.length; word++){
                     for(databaseWord = 0; databaseWord < nowMessage.length; databaseWord++){
                         if(nowMessage[databaseWord].toLowerCase() === messageTitle[word]){
-                            console.log(messageTitle[word]);
                             sendMessage = true;
                         }   
                     }
@@ -205,13 +200,13 @@ function checkForInterest(sqlite3, client, message){
                 for(word = 0; word < description.length; word++){
                     for(databaseWord = 0; databaseWord < nowMessage.length; databaseWord++){
                         if(nowMessage[databaseWord].toLowerCase() === description[word]){
-                            console.log(description[word]);
                             sendMessage = true;
                         }
                     }
                 }
             }
             if(sendMessage){
+                /* Send message to users because we found his interests (one word from his interests) in events channel */ 
                 let curerntUser = client.users.cache.find(user => user.username === rows[i].username);
                 curerntUser.send(`Hello!\nYou might be interesed in in newly added event in events channel on ${message.guild.name} discord server\n${message.url}`);
             }
