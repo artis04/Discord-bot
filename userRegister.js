@@ -1,3 +1,5 @@
+const { title } = require('process');
+
 var eventRegistry = function eventRegistry(sqlite3, message, userExists){
     // const sqlite3 = require('sqlite3').verbose();
     let db = new sqlite3.Database("./database.db");
@@ -157,31 +159,66 @@ var getUserRegistry = function getUserRegistry(sqlite3, message, command){
     
 }
 
-function checkForInterest(sqlite3, message){
+function checkForInterest(sqlite3, client, message){
     let db = new sqlite3.Database("./database.db");
     // let sql = `SELECT * FROM eventRegister WHERE Prefered_programming_languages LIKE '%python%'`;
 
     var fs = require('fs');
     var questions = fs.readFileSync('registryForm.txt').toString().split("\r\n");
 
+    message.embeds.forEach((embed) => {
+        description = embed.description.toLowerCase().replace(/\,/g,'');
+        messageTitle = embed.title.toLowerCase().replace(/\,/g,'');
+    })
+    description = description.split(" ");
+    messageTitle = messageTitle.split(" "); // get words as lists
+
     let sql = `SELECT * FROM eventRegister`;
     db.all(sql, function(error, rows) {
         if(error) return console.error;
         for(i = 0; i < rows.length; i++){
+            let sendMessage = false;
             for(j = 0; j < questions.length; j++){
-                let nowMessage = rows[i][questions[j].replace(/\s/g, '_')];
-                if(nowMessage === undefined || nowMessage === null){
-                    nowMessage = rows[i][questions[j]];
-                }
+                let nowMessage = rows[i][questions[j].replace(/\s/g, '_')]; // replaces all spaces with _
 
-                console.log(nowMessage);
+                /* If columname has no spaces */
+                if(nowMessage === undefined){
+                    nowMessage = rows[i][questions[j]];
+                
+                /* If field is empty */
+                }else if(nowMessage === null){
+                    continue;
+                }
+                
+                /* My name is Artis and if event message contains word "is" i cannot use .include....
+                    Have to use loads of "for" loops, I really don't like it */ // Or just not check for name / surname ... column
+
+                nowMessage = nowMessage.replace(/\,/g,'').replace(/\./g,'').split(" ");
+                for(word = 0; word < messageTitle.length; word++){
+                    for(databaseWord = 0; databaseWord < nowMessage.length; databaseWord++){
+                        if(nowMessage[databaseWord].toLowerCase() === messageTitle[word]){
+                            console.log(messageTitle[word]);
+                            sendMessage = true;
+                        }   
+                    }
+                }
+                for(word = 0; word < description.length; word++){
+                    for(databaseWord = 0; databaseWord < nowMessage.length; databaseWord++){
+                        if(nowMessage[databaseWord].toLowerCase() === description[word]){
+                            console.log(description[word]);
+                            sendMessage = true;
+                        }
+                    }
+                }
+            }
+            if(sendMessage){
+                let curerntUser = client.users.cache.find(user => user.username === rows[i].username);
+                curerntUser.send(`Hello!\nYou might be interesed in in newly added event in events channel on ${message.guild.name} discord server\n${message.url}`);
             }
         }
-        console.log(rows);
     })
 }
     
 module.exports.getUserRegistry = getUserRegistry;
 module.exports.eventRegistry = eventRegistry;
-// module.exports.sendInfo = sendInfo;
 module.exports.checkForInterest = checkForInterest;

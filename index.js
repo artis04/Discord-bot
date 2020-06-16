@@ -72,9 +72,16 @@ client.on('message', async message => {
         }
         return; // don't run further code as this is dm
     }
-
+    if(message.content === "jahoo"){
+      let embed = new Discord.MessageEmbed();
+      embed.setTitle("This is python title, today you are going to learn")
+      embed.setDescription("codning ans so on also RubY and GO, java-script and jaVa");
+      // message.channel.send({ embed });
+      eventChannel.send({ embed })
+    }
     if(message.channel === eventChannel){
-      userRegiter.checkForInterest(sqlite3, message);
+      userRegiter.checkForInterest(sqlite3, client, message);
+
       return;
     }
 
