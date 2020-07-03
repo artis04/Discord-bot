@@ -5,7 +5,7 @@ var achievement = function achievement(sqlite3, description, mentionedUser, from
     date += ` (GMT+3)`;
 
     /* Add new row in database "achievements" table */
-    sql = "INSERT INTO achivments (username, userID, description, fromUserID, fromUsername, date) VALUES(?, ?, ?, ?, ?, ?)";
+    sql = "INSERT INTO achievements (username, userID, description, fromUserID, fromUsername, date) VALUES(?, ?, ?, ?, ?, ?)";
     db.run(sql, [mentionedUser.username, mentionedUser.id, description, fromUser.id, fromUser.username, date], function(error) {
         if(error){
             message.channel.send("**Failed to communicate with database! achievement has not been saved!!!**");
@@ -23,7 +23,7 @@ var achievement = function achievement(sqlite3, description, mentionedUser, from
 var showLastTen = function showLastTen(sqlite3, user, message, dmMessage){
     db = new sqlite3.Database('./database.db');
 
-    let sql = `SELECT * FROM achivments WHERE userID = ${user.id} ORDER BY id DESC`;
+    let sql = `SELECT * FROM achievements WHERE userID = ${user.id} ORDER BY id DESC`;
     db.all(sql, (error, rows) => {
         if(error) return console.error;
         

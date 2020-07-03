@@ -22,7 +22,7 @@ var createTables = function createTables(sqlite3, textChannels){
         });
 
         sql = `
-        CREATE TABLE IF NOT EXISTS achivments (
+        CREATE TABLE IF NOT EXISTS achievements (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT,
             userID INTEGER,
