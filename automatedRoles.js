@@ -43,6 +43,7 @@ var checkPoints = function checkPoints(roleList, message, vote, user){
 
     db.get(sql, function(error, row) {
         if(error) return console.error;
+        if(row === undefined) return;
     
         if(vote === "downVote"){
             for(i = 0; i < roleList[1].length; i++){

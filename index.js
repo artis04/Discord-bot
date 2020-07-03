@@ -80,6 +80,8 @@ client.on('message', async message => {
       eventChannel.send({ embed })
     }
     /* ============ */
+
+
     if(message.channel === eventChannel){
       userRegiter.checkForInterest(sqlite3, client, message);
       return;
@@ -103,6 +105,18 @@ client.on('message', async message => {
 
         var voted_users = [];
         voted_users = getAllMentionedUsersOrChannels(message, true);
+
+        var voted_users1 = [];
+
+        message.mentions.users.forEach(user => {
+          voted_users1.push(user);
+        });
+        console.log(voted_users);
+
+        // voted_users1[0].forEach(element => {
+        //   console.log(element);
+        // });
+        console.log(voted_users1[0]);
         // list "voted_users" contains all user ID's who have been upvoted or downvoted in message
 
         /* Checks if user wants to upvote or downvote other user, and creates bool value "positiveVote" */
@@ -148,7 +162,7 @@ client.on('message', async message => {
     }else if(message.content.toLowerCase().startsWith("!leaderboard")){
       let channels = [];
       message.mentions.channels.forEach(channel => {
-        channels.push(channel)
+        channels.push(channel);
       });
 
       let count = 0;
