@@ -82,7 +82,11 @@ client.on('message', async message => {
 
         var voted_users = [];
         message.mentions.users.forEach(user => {
-          voted_users.push(user);
+          if(user != message.author){
+            voted_users.push(user);
+          }else{
+            message.channel.send(`<@${message.author.id}> Unfortunately you can't vote yourself :)`);
+          }
         });
 
         /* Checks if user wants to upvote or downvote other user, and creates bool value "positiveVote" */
