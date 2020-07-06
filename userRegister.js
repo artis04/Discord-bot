@@ -39,9 +39,9 @@ To exit without saving type \`exit\``);
                 break;
             }
         }
-
+        
         /* If typed Exit then stop collector without saving */
-        if(msg.content.toLowerCase() === "exit"){
+        if(msg.content.toLowerCase() === "exit" || msg.content.toLowerCase() === "!createuser" || msg.content.toLowerCase() === "!edituser"){
             collector.stop();
 
         /* When typed save then stop collector and save data to database */
