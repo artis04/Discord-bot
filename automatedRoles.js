@@ -47,7 +47,7 @@ var checkPoints = function checkPoints(roleList, message, vote, user){
     
         if(vote === "downVote"){
             for(i = 0; i < roleList[1].length; i++){
-                if((row.downVotes.toString() == roleList[1][i] || roleList[1][i] == "+=1") && row.role_points >= roleList[0][0]){
+                if((row.downVotes.toString() == roleList[1][i]) && row.role_points >= roleList[0][0]){
                     // down-Role
                     deroleUser(roleList, message, user, row.role_points, "down");
                     message.channel.send(`😕Bad news, <@!${user.id}> just down-Roled by 1 role`);

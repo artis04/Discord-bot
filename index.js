@@ -32,29 +32,6 @@ client.on('ready', () => {
 
 });
 
-
-function getAllMentionedUsersOrChannels(message, getUsers){
-  if(getUsers){
-    split_string = "<@!";
-  }else{
-    split_string = "<#";
-  }
-  // (Discord mentioning works like: <@!CLIENT_ID>   OR <#CHANNEL_ID>)
-  var specificID = message.content.split(split_string);
-  let mentioned = [];
-  for(var i = 1; i < specificID.length; i++){
-    try{ // in case there is not valid @mention id (then do catch == skip this.)
-
-      var valid_id = specificID[i].substring(0, specificID[i].indexOf(">"))
-      if (!mentioned.includes(valid_id)){  // pervents to spam one user or channel multiple times at once.
-        mentioned.push(valid_id);
-      }
-    }
-    catch{}
-  }
-  return mentioned;
-}
-
 client.on('message', async message => {
 
     if(message.channel.type === "dm"){ // dm messages
@@ -104,59 +81,40 @@ client.on('message', async message => {
         message.delete();
 
         var voted_users = [];
-        voted_users = getAllMentionedUsersOrChannels(message, true);
-
-        var voted_users1 = [];
-
         message.mentions.users.forEach(user => {
-          voted_users1.push(user);
+          voted_users.push(user);
         });
-        console.log(voted_users);
-
-        // voted_users1[0].forEach(element => {
-        //   console.log(element);
-        // });
-        console.log(voted_users1[0]);
-        // list "voted_users" contains all user ID's who have been upvoted or downvoted in message
 
         /* Checks if user wants to upvote or downvote other user, and creates bool value "positiveVote" */
         message.content.toLowerCase().startsWith("!upvote") ? positiveVote = true : positiveVote = false;
         for(i = 0; i < voted_users.length; i++){
-            var userInfo = client.users.fetch(voted_users[i]);
-            userInfo.then(user => {
-                userPoints.addPoints(sqlite3, positiveVote, user, message, roleList);
-            }).catch(console.error);
+            userPoints.addPoints(sqlite3, positiveVote, voted_users[i], message, roleList);
         };
 
-        
     }else if(message.content.toLowerCase().startsWith("!points")){
-        let voted_users = getAllMentionedUsersOrChannels(message, true);
-        let channels = getAllMentionedUsersOrChannels(message, false);
-        let users = [];
-
-        if(voted_users.length === 0){
-            voted_users = [message.author.id];
-        }
-        // changes channels ID to channels name
+        var voted_users = [];
         let mentionedTextChannels = []
-        message.guild.channels.cache.forEach(channel => {
-            if(channels.includes(channel.id)){
-                mentionedTextChannels.push(channel);
-            }
+
+        message.mentions.users.forEach(user => {
+          voted_users.push(user);
         });
 
+        message.mentions.channels.forEach(channel => {
+          mentionedTextChannels.push(channel);
+        });
+
+        if(voted_users.length === 0){
+          voted_users = [message.author];
+      }
+
         for(i=0; i < voted_users.length; i++){
-            var userInfo = client.users.fetch(voted_users[i]);
-            userInfo.then(async user => {
-                users.push(user);
-                if(mentionedTextChannels.length === 0){
-                    userPoints.sendUserPoints(sqlite3, user,message, undefined);
-                }else{
-                    for(i = 0; i < mentionedTextChannels.length; i++){
-                        userPoints.sendUserPoints(sqlite3, user, message, mentionedTextChannels[i]);
-                    }
-                }
-            }).catch(console.error);
+          if(mentionedTextChannels.length === 0){
+            userPoints.sendUserPoints(sqlite3, voted_users[i], message, undefined);
+          }else{
+            for(j = 0; j < mentionedTextChannels.length; j++){
+              userPoints.sendUserPoints(sqlite3, voted_users[i], message, mentionedTextChannels[j]);
+            }
+          }
         }
 
     }else if(message.content.toLowerCase().startsWith("!leaderboard")){
@@ -173,19 +131,18 @@ client.on('message', async message => {
       
     }else if(message.content.toLowerCase().startsWith("!achievement ") && (sensei || owner)){
       message.delete();
-        let votedUsers = getAllMentionedUsersOrChannels(message, true);
+      let voted_users = [];
+      message.mentions.users.forEach(user => {
+        voted_users.push(user);
+      });
 
-        let description = message.content.split("<@!");
-        description = description[description.length - 1];
-        description = description.substring(20, description.length);
+      let description = message.content.split("<@!");
+      description = description[description.length - 1];
+      description = description.substring(20, description.length);
 
-        for(i = 0; i < votedUsers.length; i++){
-            var userInfo = client.users.fetch(votedUsers[i]);
-            // userInfo contains id; is_bot?; username; discriminator; avatarID; flags; lastmessageid; lastmessagechannelid
-            userInfo.then(user => {
-                achievements.achievement(sqlite3, description, user, message.author, message);
-            }).catch(console.error);
-        };
+      for(i = 0; i < voted_users.length; i++){
+        achievements.achievement(sqlite3, description, voted_users[i], message.author, message);
+      };
     }else if(message.content.toLowerCase().startsWith("!achievements") || (message.content.toLowerCase().startsWith("!achievement") && !(sensei || owner))){
       let user = message.mentions.users.first();
       if(user === undefined) user = message.author;
