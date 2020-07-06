@@ -47,17 +47,19 @@ var checkPoints = function checkPoints(roleList, message, vote, user){
     
         if(vote === "downVote"){
             for(i = 0; i < roleList[1].length; i++){
-                if((row.downVotes.toString() == roleList[1][i]) && row.role_points >= roleList[0][0]){
+                if((row.downVotes.toString() == roleList[1][i] || (roleList[1][i] == "+=1" && row.downVotes > parseInt(roleList[1][i-1]))) && row.role_points >= roleList[0][0]){
                     // down-Role
                     deroleUser(roleList, message, user, row.role_points, "down");
                     message.channel.send(`😕Bad news, <@!${user.id}> just down-Roled by 1 role`);
+                    break;
+                    //(roleList[1][i] == "+=1" && row.downvotes > parseInt(roleList[1][i-1]))
                 }
             }
         }else{
             for(i = 0; i < roleList[0].length; i++){
                 if(row.upVotes.toString() == roleList[0][i]){
                     // up-Role
-                    createRoleIfNotExistsAndAssingToUser(roleList, i, message, user, "up"); 
+                    changeRole(roleList, i, message, user, "up"); 
                     message.channel.send(`Congratulations <@!${user.id}>, you just up-Roled to a new role!🎉🎊🎉🎊`);
                 }
             }
@@ -69,19 +71,21 @@ function deroleUser(roleList, message, user, rolePoints){
     let db = new sqlite3.Database('./database.db');
     let sql = `UPDATE votes SET role_points = 0  WHERE userID = ${user.id}`;
 
-    for(i in roleList[0]){
-        if(roleList[0][parseInt(i)+1] === undefined){
+    // for(i in roleList[0]){
+    for(i = 0; i < roleList[0].length; i++){
+        if(roleList[0][i+1] === undefined){
             // user reached more than last upvote number in roles.txt!
-            sql = `UPDATE votes SET role_points = ${roleList[0][i - 1]}`;
+            sql = `UPDATE votes SET role_points = ${roleList[0][i - 1]} WHERE userID = ${user.id}`;
+            changeRole(roleList, i + 1, message, user, "down")
             break;
         }
 
-        if(parseInt(roleList[0][i]) <= rolePoints && (parseInt(roleList[0][parseInt(i) + 1]) > rolePoints)){ 
+        if((parseInt(roleList[0][i]) <= rolePoints) && (parseInt(roleList[0][i + 1]) > rolePoints)){ 
             roleList[0][i-1] === undefined ? pts = 0 : pts = roleList[0][i-1];
 
             /* Remove points to starting at previous role */
             sql = `UPDATE votes SET role_points = ${parseInt(pts)} WHERE userID = ${user.id}`;
-            createRoleIfNotExistsAndAssingToUser(roleList, parseInt(i) + 1, message, user, "down");
+            changeRole(roleList, i + 1, message, user, "down");
             break;
         }
     }
@@ -90,7 +94,7 @@ function deroleUser(roleList, message, user, rolePoints){
     });
 }
 
-async function createRoleIfNotExistsAndAssingToUser(roleList, lineIndex, message, user, vote){
+async function changeRole(roleList, lineIndex, message, user, vote){
 
     /* remove previous roles */
     let lowerDiscordRole;
@@ -100,7 +104,7 @@ async function createRoleIfNotExistsAndAssingToUser(roleList, lineIndex, message
     try {currentDiscordRole = message.guild.roles.cache.find(role => role.name === roleList[2][parseInt(lineIndex) - 1].split(" == ")[0]); }catch{}
     try {higherDiscordRole = message.guild.roles.cache.find(role => role.name === roleList[2][parseInt(lineIndex)].split(" == ")[0]);}catch{}
     
-    if(higherDiscordRole === undefined){
+    if(higherDiscordRole === undefined && roleList[2].length != lineIndex){
         /* Create role */
         let roleName = roleList[2][lineIndex].split(" == ")[0];
         let roleColor = roleList[2][lineIndex].split(" == ")[1];
