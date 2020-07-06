@@ -40,6 +40,7 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
                     }
 
                     /* OPTIONAL shows how many and whic users are with the same points when typed "!points" */
+                    /*
                     usernamesWithSamePoints = [];
                     for(i = 0;i < rows.length; i++){
                         if(rows[i].points === pts.points && rows[i].userID != pts.userID){
@@ -61,6 +62,7 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
                         message.channel.send(myMessage);
                         
                     }
+                    */
                     /* ====================================================================================== */
                     
                     if(serverPlace === ""){
@@ -80,14 +82,45 @@ var sendUserPoints = function sendUserPoints(sqlite3, user, message, channel){
         } else {
             sql = `SELECT ${channel.name} FROM channels WHERE userID = ?`;
             db.get(sql, [user.id], function(error, row) {
-                if(error) return console.error;
-                myMessage = `user <@!${user.id}> has ${row[channel.name]} points in <#${channel.id}> channel.`;
+                var newChannel = false;
+                if(error){
+                    if(error.message.substring(0, 30) === "SQLITE_ERROR: no such column: "){
+                        newChannel = true;
+                    }else{
+                        return console.log(error.message);
+                    }
+                }
+                if(newChannel){
+                    myMessage = `User <@!${user.id}> has 0 points in <#${channel.id}> channel.`
+                }else{
+                    myMessage = `user <@!${user.id}> has ${row[channel.name]} points in <#${channel.id}> channel.`;
+                }
                 message.channel.send(myMessage);
             });
         }
         
         
     });
+}
+
+function addNewColumn(sqlite3, columnName, user, message, userPoints){
+    let db = new sqlite3.Database('./database.db');
+    var sql = `ALTER TABLE channels ADD ${columnName} INTEGER DEFAULT 0`;
+
+    db.run(sql, function(error){
+        if(error) return console.log(error.message);
+
+
+        sql = `UPDATE channels SET ${columnName} = 1 WHERE userID = ${user.id}`;
+        db.run(sql, function(error){
+            if(error) return console.log(error.message);
+
+            sendMessage(message, user, true, userPoints + 1);
+        });
+
+
+    });
+
 }
 
 var leaderboard = function leaderboard(sqlite3, message, channel){
@@ -176,8 +209,12 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
             // sql = `UPDATE channels SET ` + message.channel.name + ` = ` + message.channel.name + ` + 1 WHERE userID = ?`;
             db.run(sql, function(error) {
                 if(error){
-                    message.channel.send(`Database error, <@${user.id}> user is NOT updated!`);
-                    return console.error(error.message);
+                    if(error.message.substring(0, 30) === "SQLITE_ERROR: no such column: "){
+                          return addNewColumn(sqlite3, message.channel.name, user, message, userPoints);
+                    }else{
+                        message.channel.send(`Database error, <@${user.id}> user is NOT updated!`);
+                        return console.error(error.message);
+                    }
                 }
                 sendMessage(message, user, true, userPoints + 1); // user points + 1 because it is not updated yet
             })
@@ -198,8 +235,6 @@ var addPoints = function addPoints(sqlite3, positiveVote, user, message, roleLis
         }
         updatePoints(sqlite3, user.id);  // update points column in database
 
-        
-        
         positiveVote ? vote = "upVote" : vote = "downVote";
         // Role_giving.createRoles(roleList, message, vote, user);
     });
