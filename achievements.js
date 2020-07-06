@@ -41,7 +41,7 @@ var showLastTen = function showLastTen(sqlite3, user, message, dmMessage){
             } 
             count++;
         }
-        // if(rows.length > 10 && !dmMessage) myMessage += `\n\nIf you want to see all your achievements then write me in private \`!achievements\``;
+
         message.channel.send(myMessage);
     })
 }
