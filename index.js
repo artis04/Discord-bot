@@ -51,8 +51,8 @@ client.on('message', async message => {
     /* Test purpuse */
     if(message.content === "jahoo"){
       let embed = new Discord.MessageEmbed();
-      embed.setTitle("This is python3 title, today you are going to learn")
-      embed.setDescription("coding ans so on also RubY and GzO, java-script and ja12Va");
+      embed.setTitle("Hello all interested in programming")
+      embed.setDescription("this is description abdulaziz");
       // message.channel.send({ embed });
       eventChannel.send({ embed })
     }

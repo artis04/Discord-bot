@@ -122,7 +122,7 @@ async function changeRole(roleList, lineIndex, message, user, vote){
 
     /* If 1 lower role is deleted or smthing, then my code will remove from user role and will not create new one */
     // BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG
-
+    // FIXED FIXED FIXED FIXED FIXED FIXED FIXED FIXED FIXED FIXED FIXED FIXED FIXED FIXED FIXED FIXED FIXED FIXED
 
     if(lowerDiscordRole === undefined && lineIndex != 1 && vote === "down"){
         var [roleName, roleColor] = roleList[2][lineIndex - 2].split(" == ");
