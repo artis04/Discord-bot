@@ -57,7 +57,7 @@ var checkPoints = function checkPoints(roleList, message, vote, user){
             }
         }else{
             for(i = 0; i < roleList[0].length; i++){
-                if(row.upVotes.toString() == roleList[0][i]){
+                if(row.role_points.toString() == roleList[0][i]){
                     // up-Role
                     changeRole(roleList, i, message, user, "up"); 
                     message.channel.send(`Congratulations <@!${user.id}>, you just up-Roled to a new role!🎉🎊🎉🎊`);
@@ -104,7 +104,7 @@ async function changeRole(roleList, lineIndex, message, user, vote){
     try {currentDiscordRole = message.guild.roles.cache.find(role => role.name === roleList[2][parseInt(lineIndex) - 1].split(" == ")[0]); }catch{}
     try {higherDiscordRole = message.guild.roles.cache.find(role => role.name === roleList[2][parseInt(lineIndex)].split(" == ")[0]);}catch{}
     
-    if(higherDiscordRole === undefined && roleList[2].length != lineIndex){
+    if(higherDiscordRole === undefined && vote === "up" && roleList[2].length != lineIndex){
         /* Create role */
         let roleName = roleList[2][lineIndex].split(" == ")[0];
         let roleColor = roleList[2][lineIndex].split(" == ")[1];
@@ -118,8 +118,24 @@ async function changeRole(roleList, lineIndex, message, user, vote){
         higherDiscordRole = message.guild.roles.cache.find(role => role.name === roleList[2][parseInt(lineIndex)].split(" == ")[0]);
     }
 
+    
+
     /* If 1 lower role is deleted or smthing, then my code will remove from user role and will not create new one */
     // BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG BUG
+
+
+    if(lowerDiscordRole === undefined && lineIndex != 1 && vote === "down"){
+        var [roleName, roleColor] = roleList[2][lineIndex - 2].split(" == ");
+        await message.guild.roles.create({
+            data: {
+                name: roleName,
+                color:roleColor
+            },
+        }).catch(console.error);
+        lowerDiscordRole = message.guild.roles.cache.find(role => role.name === roleName);
+    }
+
+
 
     message.mentions.members.forEach(member => {
         if(member.id === user.id){
