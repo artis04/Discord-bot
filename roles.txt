@@ -12,9 +12,9 @@
 6
 +=1
 ===roles===
-noob == BLUE
-rookie == RED
-getting_better == GREEN
-good == BROWN
-awesome == BLACK
-indiano == WHITE
+1stRole == YELLOW
+2ndRole == ORANGE
+3rdRole == RED
+4thRole == BLACK
+5thRole == BLUE
+6thRole == WHITE
