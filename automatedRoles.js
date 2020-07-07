@@ -141,17 +141,17 @@ async function changeRole(roleList, lineIndex, message, user, vote){
         if(member.id === user.id){
             if(vote === "down"){
                 if(lowerDiscordRole === undefined){
-                    member.roles.remove(currentDiscordRole);
+                    try{member.roles.remove(currentDiscordRole);}catch{}
                 }else{
-                    member.roles.add(lowerDiscordRole);
-                    member.roles.remove(currentDiscordRole);
+                    try{member.roles.add(lowerDiscordRole);}catch{message.channel.send("Cannot add new role to a user :(");}
+                    try{member.roles.remove(currentDiscordRole);}catch{}
                 }
             }else{
                 if(currentDiscordRole === undefined){
-                    member.roles.add(higherDiscordRole);
+                    try{member.roles.add(higherDiscordRole);}catch{message.channel.send("Cannot add new role to a user :(");}
                 }else{
-                    member.roles.add(higherDiscordRole);
-                    member.roles.remove(currentDiscordRole);
+                    try{member.roles.add(higherDiscordRole);}catch{message.channel.send("Cannot add new role to a user :(");}
+                    try{member.roles.remove(currentDiscordRole);}catch{}
                 }
             }
         
