@@ -32,6 +32,20 @@ client.on('ready', () => {
 
 });
 
+function limit_mentions(mentionedUsers, message){
+  const limitMentions = 2;
+  let newList = [];
+  if(mentionedUsers.length > limitMentions){
+    message.channel.send(`Max limit of mentions has been reached!`);
+    for(i = 0; i < limitMentions; i++){
+      newList.push(mentionedUsers[i]);
+    }
+  }else{
+    return mentionedUsers;
+  }
+  return newList;
+}
+
 client.on('message', async message => {
 
     if(message.channel.type === "dm"){ // dm messages
@@ -84,10 +98,11 @@ client.on('message', async message => {
         message.mentions.users.forEach(user => {
           if(user != message.author){
             voted_users.push(user);
-          }else{
+          }else{  
             message.channel.send(`<@${message.author.id}> Unfortunately you can't vote yourself :)`);
           }
         });
+        voted_users = limit_mentions(voted_users, message);
 
         /* Checks if user wants to upvote or downvote other user, and creates bool value "positiveVote" */
         message.content.toLowerCase().startsWith("!upvote") ? positiveVote = true : positiveVote = false;
@@ -111,21 +126,26 @@ client.on('message', async message => {
           voted_users = [message.author];
       }
 
-        for(i=0; i < voted_users.length; i++){
-          if(mentionedTextChannels.length === 0){
-            userPoints.sendUserPoints(sqlite3, voted_users[i], message, undefined);
-          }else{
-            for(j = 0; j < mentionedTextChannels.length; j++){
-              userPoints.sendUserPoints(sqlite3, voted_users[i], message, mentionedTextChannels[j]);
-            }
+      voted_users = limit_mentions(voted_users, message);
+      mentionedTextChannels = limit_mentions(mentionedTextChannels, message);
+
+      for(i=0; i < voted_users.length; i++){
+        if(mentionedTextChannels.length === 0){
+          userPoints.sendUserPoints(sqlite3, voted_users[i], message, undefined);
+        }else{
+          for(j = 0; j < mentionedTextChannels.length; j++){
+            userPoints.sendUserPoints(sqlite3, voted_users[i], message, mentionedTextChannels[j]);
           }
         }
+      }
 
     }else if(message.content.toLowerCase().startsWith("!leaderboard")){
       let channels = [];
       message.mentions.channels.forEach(channel => {
         channels.push(channel);
       });
+
+      channels = limit_mentions(channels, message);
 
       let count = 0;
       do{
@@ -147,10 +167,20 @@ client.on('message', async message => {
       for(i = 0; i < voted_users.length; i++){
         achievements.achievement(sqlite3, description, voted_users[i], message.author, message);
       };
-    }else if(message.content.toLowerCase().startsWith("!achievements") || (message.content.toLowerCase().startsWith("!achievement") && !(sensei || owner))){
-      let user = message.mentions.users.first();
-      if(user === undefined) user = message.author;
-      achievements.showLastTen(sqlite3, user, message, false);
-  }
+    }else if(message.content.toLowerCase().startsWith("!achievements") || (message.content.toLowerCase().startsWith("!achievement"))){
+      let users = [];
+
+      message.mentions.users.forEach(eachUser => {
+        users.push(eachUser);
+      });
+
+      users = limit_mentions(users, message);
+
+      if(users.length === 0) user = [message.author];
+
+      for(i = 0; i < users.length; i++){
+        achievements.showLastTen(sqlite3, users[i], message, false);
+      }
+    }
 });
  
